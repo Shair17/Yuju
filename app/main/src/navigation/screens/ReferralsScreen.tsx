@@ -9,6 +9,8 @@ import {ReferrerItem} from '@yuju/components/molecules/ReferrerItem';
 import {useShareMyReferralCode} from '@yuju/global-hooks/useShareMyReferralCode';
 import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';
 import {SimpleGrid} from 'react-native-super-grid';
+import {LoadingTemplate} from '@yuju/components/templates/LoadingTemplate';
+import {formatCurrency} from '@yuju/common/utils/format';
 
 const referralsNotFoundImagePlaceholder = require('@yuju/assets/images/oops-404-error.png');
 
@@ -27,10 +29,14 @@ export const ReferralsScreen: React.FC<Props> = ({navigation}) => {
   } = useShareMyReferralCode();
   const hasReferredBy = !!myReferrals?.referredBy;
   const hasReferrals = myReferrals?.referrals.length !== 0;
+  const winUpTo = formatCurrency(myReferrals?.earn ?? 0);
+  const myEarnings = formatCurrency(myReferrals?.myEarnings ?? 0);
 
   const goToMyReferralsScreen = () => {
     navigation.navigate('MyReferralsScreen');
   };
+
+  if (isLoading) return <LoadingTemplate />;
 
   return (
     <ScrollScreen>
@@ -42,7 +48,7 @@ export const ReferralsScreen: React.FC<Props> = ({navigation}) => {
           <Text fontSize="2xl">
             Tu ganancia es de{' '}
             <Text fontSize="2xl" fontWeight="bold">
-              S/. {myReferrals?.myEarnings ?? '-'}
+              {myEarnings}
             </Text>
           </Text>
         </Div>
@@ -53,7 +59,7 @@ export const ReferralsScreen: React.FC<Props> = ({navigation}) => {
             <Text color="secondary900" fontSize="4xl" fontWeight="bold">
               Gana hasta{' '}
               <Text color="secondary900" fontSize="4xl" fontWeight="bold">
-                S./{myReferrals?.earn ?? '-'}
+                {winUpTo}
               </Text>{' '}
               por invitar amigos
             </Text>

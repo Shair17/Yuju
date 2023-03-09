@@ -2,6 +2,7 @@ import React from 'react';
 import {TouchableNativeFeedback, TouchableOpacity} from 'react-native';
 import {Button, Div, Icon, Text} from 'react-native-magnus';
 import {useShareMyReferralCode} from '@yuju/global-hooks/useShareMyReferralCode';
+import {formatCurrency} from '@yuju/common/utils/format';
 
 interface Props {
   goToReferralsScreen: () => void;
@@ -15,6 +16,7 @@ export const HomeScreenInviteFriends: React.FC<Props> = ({
     handleCopyMyReferralCodeToClipboard,
     handleShareMyReferralCode,
   } = useShareMyReferralCode();
+  const winUpTo = formatCurrency(myReferrals?.earn ?? 0);
 
   return (
     <Div mt="lg">
@@ -32,7 +34,7 @@ export const HomeScreenInviteFriends: React.FC<Props> = ({
               <Text color="secondary900" fontSize="4xl" fontWeight="bold">
                 Gana hasta{' '}
                 <Text color="secondary900" fontSize="4xl" fontWeight="bold">
-                  S./{myReferrals?.earn ?? '10'}
+                  {winUpTo}
                 </Text>{' '}
                 por invitar amigos
               </Text>

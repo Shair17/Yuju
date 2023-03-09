@@ -10,6 +10,7 @@ import {Notifier} from 'react-native-notifier';
 import {useRequest} from '../../global-hooks/useRequest';
 import {GetMyProfile} from '../../types/app';
 import {wait} from '@yuju/common/utils/time';
+import {useDimensions} from '@yuju/global-hooks/useDimensions';
 
 export const HomeScreenCurrentLocation: React.FC = () => {
   const [currentAddress, setCurrentAddress] = useState<string | null>(null);
@@ -20,6 +21,9 @@ export const HomeScreenCurrentLocation: React.FC = () => {
     method: 'GET',
     url: '/users/me',
   });
+  const {
+    window: {width: windowWidth, height: windowHeight},
+  } = useDimensions();
   const [, setClipboard] = useClipboard();
   const {
     userLocation,
@@ -72,6 +76,7 @@ export const HomeScreenCurrentLocation: React.FC = () => {
     following.current = true;
 
     mapRef.current?.animateCamera({
+      zoom: 18,
       center: {latitude, longitude},
     });
   };
@@ -156,8 +161,10 @@ export const HomeScreenCurrentLocation: React.FC = () => {
               initialRegion={{
                 latitude: initialPosition.latitude,
                 longitude: initialPosition.longitude,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
+                // Para zoom
+                // https://github.com/react-native-maps/react-native-maps/issues/2129
+                latitudeDelta: 0.004,
+                longitudeDelta: 0.004 * (windowWidth / windowHeight),
               }}
               onMapReady={() => {
                 mapReady.current = false;

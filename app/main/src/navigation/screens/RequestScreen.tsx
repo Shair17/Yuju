@@ -1,12 +1,7 @@
 import React, {useRef, useMemo, useEffect, useCallback, useState} from 'react';
-import {StatusBar, StyleSheet, TouchableOpacity} from 'react-native';
-import MapView, {
-  Marker,
-  Polygon,
-  MapViewProps,
-  PROVIDER_GOOGLE,
-} from 'react-native-maps';
-import {Avatar, Button, Div, Icon, Text, Input} from 'react-native-magnus';
+import {StatusBar, StyleSheet} from 'react-native';
+import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
+import {Avatar, Button, Div, Icon} from 'react-native-magnus';
 import {defaultUserLocation, useLocation} from '@yuju/global-hooks/useLocation';
 import {ActivityIndicator} from '@yuju/components/atoms/ActivityIndicator';
 import {GPSAccessDenied} from '@yuju/components/molecules/GPSAccessDenied';
@@ -14,22 +9,20 @@ import {useRequest} from '@yuju/global-hooks/useRequest';
 import {GetMyProfile} from '@yuju/types/app';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RequestStackParams} from '../bottom-tabs/RequestStackScreen';
-import BottomSheet, {
-  BottomSheetTextInput,
-  BottomSheetFooter,
-  BottomSheetView,
-  BottomSheetFooterProps,
-  BottomSheetFlatList,
-  BottomSheetScrollView,
-  BottomSheetVirtualizedList,
-} from '@gorhom/bottom-sheet';
+import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
 import {PulseActivityIndicator} from '@yuju/components/atoms/PulseActivityIndicator';
 import {useDimensions} from '@yuju/global-hooks/useDimensions';
+import NumericInput from 'react-native-numeric-input';
+import {RequestScreenAskExtraInfo} from '@yuju/components/organisms/RequestScreenAskExtraInfo';
+import {RequestScreenAskAddressesSeparator} from '@yuju/components/organisms/RequestScreenAskAddressesSeparator';
+import {RequestScreenAskAddressItem} from '@yuju/components/organisms/RequestScreenAskAddressItem';
 
 interface Props
   extends NativeStackScreenProps<RequestStackParams, 'RequestScreen'> {}
 
 export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
+  const [price, setPrice] = useState<number>(2);
+  const [passengersCount, setPassengersCount] = useState<number>(1);
   const [currentAddress, setCurrentAddress] = useState<string | null>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['50%', '75%', '100%'], []);
@@ -199,29 +192,12 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
       >
         <BottomSheetView style={{flex: 1}}>
           <Div px="2xl" pt="lg" flex={1}>
-            <Text fontSize="4xl" fontWeight="700">
-              Solicitar Mototaxi
-            </Text>
-
-            <Div mt="md">
+            <Div>
               {/** Separator */}
-              <Div
-                left={11.5}
-                position="absolute"
-                h="100%"
-                alignItems="center"
-                justifyContent="center">
-                <Div
-                  w={1}
-                  borderWidth={1}
-                  borderColor="gray200"
-                  h="20%"
-                  rounded="circle"
-                />
-              </Div>
+              <RequestScreenAskAddressesSeparator />
 
-              <Div row justifyContent="space-between">
-                <Div alignItems="center" justifyContent="center" mr="md">
+              <RequestScreenAskAddressItem
+                leftIcon={
                   <PulseActivityIndicator
                     style={{
                       alignItems: 'center',
@@ -231,40 +207,19 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
                     }}
                     size={25}
                   />
-                </Div>
+                }
+                locationInputLabel="Desde"
+                locationValue={
+                  !!currentAddress ? currentAddress : 'Mi ubicación actual'
+                }
+                onLocationInputPress={() =>
+                  navigation.navigate('ChooseStartingLocationScreen')
+                }
+              />
 
-                <Div flex={1}>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() =>
-                      navigation.navigate('ChooseStartingLocationScreen')
-                    }
-                    style={{borderRadius: 8}}>
-                    <Div
-                      overflow="hidden"
-                      bg="gray100"
-                      rounded="lg"
-                      px="md"
-                      py="sm">
-                      <Text fontSize={10} fontWeight="500" color="gray400">
-                        Desde
-                      </Text>
-                      <Text
-                        fontSize="xl"
-                        fontWeight="bold"
-                        color="#000"
-                        numberOfLines={1}>
-                        {!!currentAddress
-                          ? currentAddress
-                          : 'Mi ubicación actual'}
-                      </Text>
-                    </Div>
-                  </TouchableOpacity>
-                </Div>
-              </Div>
-
-              <Div row mt="md" justifyContent="space-between">
-                <Div alignItems="center" justifyContent="center" mr="md">
+              <RequestScreenAskAddressItem
+                mt="md"
+                leftIcon={
                   <Icon
                     alignSelf="center"
                     fontFamily="Ionicons"
@@ -272,47 +227,75 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
                     color="primary500"
                     fontSize={25}
                   />
-                </Div>
+                }
+                locationInputLabel="Hasta"
+                locationValue="Elige tu destino"
+                onLocationInputPress={() =>
+                  navigation.navigate('ChooseDestinationLocationScreen')
+                }
+              />
+            </Div>
 
-                <Div flex={1}>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() =>
-                      navigation.navigate('ChooseDestinationLocationScreen')
-                    }
-                    style={{borderRadius: 8}}>
-                    <Div
-                      overflow="hidden"
-                      bg="gray100"
-                      rounded="lg"
-                      px="md"
-                      py="sm">
-                      <Text fontSize={10} fontWeight="500" color="gray400">
-                        Hasta
-                      </Text>
-                      <Text
-                        fontSize="xl"
-                        fontWeight="bold"
-                        color="#000"
-                        numberOfLines={1}>
-                        Elige tu destino
-                      </Text>
-                    </Div>
-                  </TouchableOpacity>
-                </Div>
+            <Div mt="md">
+              {/** Cantidad de pasajeros */}
+              <Div row>
+                <RequestScreenAskExtraInfo
+                  title="¿Cuántos son?"
+                  subtitle="* Cantidad de personas que subirán a la mototaxi."
+                />
+                <NumericInput
+                  validateOnBlur
+                  onLimitReached={(isMax, msg) => console.log(isMax, msg)}
+                  value={passengersCount}
+                  onChange={setPassengersCount}
+                  editable={false}
+                  minValue={1}
+                  step={1}
+                  maxValue={3}
+                  rounded
+                  valueType="integer"
+                  totalWidth={120}
+                />
+              </Div>
+
+              {/** Precio de carrera */}
+              <Div row mt="md">
+                <RequestScreenAskExtraInfo
+                  title="¿Cuánto pagas?"
+                  subtitle="* Cantidad que estás dispuesto a pagar (S/)."
+                />
+                <NumericInput
+                  validateOnBlur
+                  onLimitReached={(isMax, msg) => console.log(isMax, msg)}
+                  value={price}
+                  onChange={setPrice}
+                  editable={false}
+                  minValue={1}
+                  step={0.5}
+                  rounded
+                  valueType="real"
+                  totalWidth={120}
+                />
               </Div>
             </Div>
 
             <Button
-              mt="3xl"
-              rounded="lg"
+              justifyContent="center"
+              alignItems="center"
+              alignSelf="center"
+              fontSize="2xl"
+              fontWeight="bold"
+              bg="primary500"
               block
-              onPress={() =>
-                navigation.navigate('MeetYourDriverScreen', {
-                  id: '123',
-                })
-              }>
-              Meet your Driver
+              h={50}
+              mt="lg"
+              rounded="lg"
+              onPress={() => {
+                // navigation.navigate('MeetYourDriverScreen', {
+                //   id: '123',
+                // })
+              }}>
+              Solicitar Mototaxi
             </Button>
           </Div>
         </BottomSheetView>

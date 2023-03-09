@@ -8,6 +8,7 @@ import {useRequest} from '@yuju/global-hooks/useRequest';
 import {GetReferralsResponse} from '@yuju/types/app';
 import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';
 import {MyReferralItem} from '@yuju/components/molecules/MyReferralItem';
+import {LoadingTemplate} from '@yuju/components/templates/LoadingTemplate';
 
 const referralsNotFoundImagePlaceholder = require('@yuju/assets/images/oops-404-error.png');
 
@@ -24,11 +25,13 @@ interface Props
 // eso es todo, nada más
 
 export const MyReferralsScreen: React.FC<Props> = ({navigation}) => {
-  const {data: myReferrals} = useRequest<GetReferralsResponse>({
+  const {isLoading, data: myReferrals} = useRequest<GetReferralsResponse>({
     method: 'GET',
     url: '/users/me/referrals',
   });
   const hasReferrals = myReferrals?.referrals.length !== 0;
+
+  if (isLoading) return <LoadingTemplate />;
 
   return (
     <ScrollScreen>
