@@ -1,0 +1,129 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table profiles {
+  id String [pk]
+  name String [not null]
+  email String
+  avatar String [not null]
+  dni String
+  phoneNumber String [unique]
+  birthDate DateTime
+  users users [not null]
+  drivers drivers [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table availabilities {
+  id String [pk]
+  isBanned Boolean [not null, default: false]
+  banReason String
+  users users [not null]
+  drivers drivers [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table users {
+  id String [pk]
+  facebookId String [unique, not null]
+  facebookAccessToken String [not null]
+  profile profiles [not null]
+  profileId String [not null]
+  availability availabilities [not null]
+  availabilityId String [not null]
+  accessToken String
+  refreshToken String
+  referralCode String [unique, not null]
+  referredBy users
+  referredById String
+  referredUsers users [not null]
+  ratings ratings [not null]
+  bugReports bug_reports [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table drivers {
+  id String [pk]
+  facebookId String [unique, not null]
+  facebookAccessToken String [not null]
+  profile profiles [not null]
+  profileId String [not null]
+  availability availabilities [not null]
+  availabilityId String [not null]
+  accessToken String
+  refreshToken String
+  membership memberships [not null]
+  ratings ratings [not null]
+  bugReports bug_reports [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table memberships {
+  id String [pk]
+  payment Float [not null]
+  paymentType PaymentType [not null]
+  paymentInfo String
+  start DateTime [not null]
+  end DateTime [not null]
+  driver drivers
+  driverId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table ratings {
+  id String [pk]
+  value Int [not null, default: 0]
+  comment String
+  user users [not null]
+  userId String [not null]
+  driver drivers [not null]
+  driverId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table bug_reports {
+  id String [pk]
+  title String [not null]
+  description String [not null]
+  extra String
+  user users
+  userId String
+  driver drivers
+  driverId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Enum PaymentType {
+  Yape
+  Plin
+  Cash
+  Other
+}
+
+Ref: users.profileId > profiles.id
+
+Ref: users.availabilityId > availabilities.id
+
+Ref: users.referredById - users.id
+
+Ref: drivers.profileId > profiles.id
+
+Ref: drivers.availabilityId > availabilities.id
+
+Ref: memberships.driverId > drivers.id
+
+Ref: ratings.userId > users.id
+
+Ref: ratings.driverId > drivers.id
+
+Ref: bug_reports.userId > users.id
+
+Ref: bug_reports.driverId > drivers.id

@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id String @id @default(cuid())
+
+  name        String
+  email       String?
+  avatar      String
+  dni         String?
+  phoneNumber String?   @unique @map("phone_number") @db.VarChar(9)
+  birthDate   DateTime? @map("birth_date")
+
+  users   User[]
+  drivers Driver[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("profiles")
+}
+
+model Availability {
+  id String @id @default(cuid())
+
+  isBanned  Boolean @default(false) @map("is_banned")
+  banReason String? @map("ban_reason")
+
+  users   User[]
+  drivers Driver[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("availabilities")
+}
+
+// Agregar si User es admin :)
+model User {
+  id String @id @default(cuid())
+
+  facebookId          String @unique @map("fb_id")
+  facebookAccessToken String @map("fb_access_token") @db.VarChar(512)
+
+  profile   Profile @relation(fields: [profileId], references: [id])
+  profileId String
+
+  availability   Availability @relation(fields: [availabilityId], references: [id])
+  availabilityId String
+
+  accessToken  String? @map("access_token") @db.VarChar(1024)
+  refreshToken String? @map("refresh_token") @db.VarChar(1024)
+
+  referralCode  String  @unique
+  referredBy    User?   @relation("ReferredBy", fields: [referredById], references: [id])
+  referredById  String?
+  referredUsers User[]  @relation("ReferredBy")
+
+  ratings Rating[]
+
+  bugReports BugReport[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Driver {
+  id String @id @default(cuid())
+
+  facebookId          String @unique @map("fb_id")
+  facebookAccessToken String @map("fb_access_token") @db.VarChar(512)
+
+  profile   Profile @relation(fields: [profileId], references: [id])
+  profileId String
+
+  availability   Availability @relation(fields: [availabilityId], references: [id])
+  availabilityId String
+
+  accessToken  String? @map("access_token") @db.VarChar(1024)
+  refreshToken String? @map("refresh_token") @db.VarChar(1024)
+
+  membership Membership[]
+
+  ratings Rating[]
+
+  bugReports BugReport[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("drivers")
+}
+
+model Membership {
+  id String @id @default(cuid())
+
+  payment     Float
+  paymentType PaymentType @map("payment_type")
+  paymentInfo String?     @map("payment_info")
+
+  start DateTime
+  end   DateTime
+
+  driver   Driver? @relation(fields: [driverId], references: [id])
+  driverId String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("memberships")
+}
+
+enum PaymentType {
+  Yape
+  Plin
+  Cash
+  Other
+}
+
+model Trip {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("trips")
+}
+
+// Agregar viajes, para saber a que viaje se está calificando
+model Rating {
+  id String @id @default(cuid())
+
+  value   Int     @default(0)
+  comment String?
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  driver   Driver @relation(fields: [driverId], references: [id])
+  driverId String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("ratings")
+}
+
+model BugReport {
+  id String @id @default(cuid())
+
+  title       String
+  description String
+  extra       String?
+
+  user     User?   @relation(fields: [userId], references: [id])
+  userId   String?
+  driver   Driver? @relation(fields: [driverId], references: [id])
+  driverId String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("bug_reports")
+}

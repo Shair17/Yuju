@@ -1,0 +1,98 @@
+{
+  "name": "yuju",
+  "version": "1.0.0",
+  "description": "Backend for Yuju App",
+  "author": "Shair17",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "npm run build && node dist/main",
+    "start:dev": "ts-node-dev --respawn --exit-child ./src/main.ts | pino-pretty -c -t SYS:HH:MM:ss.l",
+    "start:prod": "node dist/main",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "createSecret": "ts-node scripts/createSecret",
+    "clear": "ts-node scripts/clear"
+  },
+  "dependencies": {
+    "@fastify/compress": "^6.2.0",
+    "@fastify/cors": "^8.2.0",
+    "@fastify/env": "^4.2.0",
+    "@fastify/helmet": "^10.1.0",
+    "@fastify/rate-limit": "^7.6.0",
+    "@fastify/routes": "^5.1.0",
+    "@mgcrea/fastify-graceful-exit": "^0.4.0",
+    "@prisma/client": "^4.10.1",
+    "@sinclair/typebox": "^0.25.16",
+    "@typegoose/typegoose": "^10.2.0",
+    "argon2": "^0.30.2",
+    "axios": "^1.2.2",
+    "cloudinary": "^1.33.0",
+    "fastify": "^4.10.2",
+    "fastify-decorators": "^3.15.0",
+    "fastify-http-errors-enhanced": "^4.1.0",
+    "fastify-plugin": "^4.4.0",
+    "fastify-socket.io": "^4.0.0",
+    "http-errors": "^2.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^6.10.0",
+    "nanoid": "3.3.4",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^3.0.2",
+    "socket.io": "^4.6.0",
+    "twilio": "^3.84.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
+    "@types/http-errors": "^2.0.1",
+    "@types/jest": "28.1.8",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/node": "^18.11.18",
+    "@types/supertest": "^2.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "28.1.3",
+    "nodemon": "^2.0.20",
+    "pino-pretty": "^9.1.1",
+    "prettier": "^2.3.2",
+    "prisma": "^4.10.1",
+    "prisma-dbml-generator": "^0.10.0",
+    "supertest": "^6.1.3",
+    "ts-jest": "28.0.8",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "4.1.0",
+    "types-fastify-socket.io": "^0.0.1",
+    "typescript": "^4.9.4"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/../src/$1"
+    }
+  }
+}
