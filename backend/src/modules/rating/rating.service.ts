@@ -173,7 +173,7 @@ export class RatingService {
       },
     });
 
-    const totalRatings = await this.getMyDriversCount(id);
+    const totalRatings = await this.getMyDriversCount(driver.id);
 
     const totalPages = Math.ceil(totalRatings / limit);
 
@@ -184,6 +184,37 @@ export class RatingService {
       totalPages,
       totalRatings,
     };
+  }
+
+  async getDriverRatingAverage(id: string) {
+    // const resultado = await this.databaseService.rating.groupBy({
+    //   where: {
+    //     id,
+    //   },
+    //   by: ['driverId'],
+    //   _sum: {
+    //     value: true,
+    //   },
+    //   _count: {
+    //     value: true,
+    //   },
+    // });
+    // const promedio = resultado[0]._sum.value! / resultado[0]._count.value;
+    // return promedio;
+
+    const ratings = await this.databaseService.rating.findMany({
+      where: {
+        id,
+      },
+    });
+
+    const sumaDeEstrellitas = ratings.reduce((suma, rating) => {
+      return suma + rating.value;
+    }, 0);
+
+    const avarage = sumaDeEstrellitas / ratings.length;
+
+    return avarage;
   }
 
   async createUserRating(id: string, data: CreateUserRatingsBodyType) {

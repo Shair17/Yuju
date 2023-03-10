@@ -15,7 +15,7 @@ export class TripController {
   @Inject(TripService)
   private readonly tripService: TripService;
 
-  @GET('/:tripId/meet-your-driver/:driverId', {
+  @GET('/meet-your-driver/:driverId', {
     onRequest: [hasBearerToken, userIsAuthenticated],
     schema: {
       params: GetMeetYourDriverParams,
