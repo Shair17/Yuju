@@ -94,8 +94,6 @@ model Driver {
   accessToken  String? @map("access_token") @db.VarChar(1024)
   refreshToken String? @map("refresh_token") @db.VarChar(1024)
 
-  membership Membership[]
-
   ratings Rating[]
 
   bugReports BugReport[]
@@ -104,25 +102,6 @@ model Driver {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("drivers")
-}
-
-model Membership {
-  id String @id @default(cuid())
-
-  payment     Float
-  paymentType PaymentType @map("payment_type")
-  paymentInfo String?     @map("payment_info")
-
-  start DateTime
-  end   DateTime
-
-  driver   Driver? @relation(fields: [driverId], references: [id])
-  driverId String?
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("memberships")
 }
 
 enum PaymentType {

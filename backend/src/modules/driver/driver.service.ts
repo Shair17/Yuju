@@ -1,9 +1,5 @@
 import {Service} from 'fastify-decorators';
 import {DatabaseService} from '../../database/database.service';
-import {
-  getCurrentMonthStart,
-  getCurrentMonthEnd,
-} from '../../common/utils/date';
 import {NotFound, BadRequest, Unauthorized} from 'http-errors';
 import {MAX_RATINGS_COUNT_FOR_MEET_YOUR_DRIVER} from '../../common/constants/app';
 
@@ -36,33 +32,6 @@ export class DriverService {
     }
 
     return driver;
-  }
-
-  async isPremium(id: string) {
-    const currentMonthStart = getCurrentMonthStart();
-    const currentMonthEnd = getCurrentMonthEnd();
-
-    const driver = await this.databaseService.driver.findUnique({
-      where: {
-        id: id,
-      },
-      select: {
-        membership: {
-          where: {
-            start: {
-              lte: currentMonthEnd,
-            },
-            end: {
-              gte: currentMonthStart,
-            },
-          },
-        },
-      },
-    });
-
-    if (!driver) return false;
-
-    return driver.membership.length > 0 ?? false;
   }
 
   async isNew(id: string): Promise<boolean> {

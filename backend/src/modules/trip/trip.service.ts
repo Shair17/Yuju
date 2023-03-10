@@ -25,7 +25,6 @@ export class TripService {
       this.driverService.findByIdOrThrow(data.driverId),
     ]);
 
-    const driverIsPremium = await this.driverService.isPremium(driver.id);
     const rankings = await this.driverService.getFirstsRatings(driver.id);
     const rankingsTotal = await this.ratingService.getMyDriversCount(driver.id);
     const rankingsAverage = await this.ratingService.getDriverRatingAverage(
@@ -48,7 +47,6 @@ export class TripService {
         rankings,
         // promedio de estrella (en base a las calificaciones)
         rankingsAverage,
-        isPremium: driverIsPremium,
       },
       user: {
         id: user.id,

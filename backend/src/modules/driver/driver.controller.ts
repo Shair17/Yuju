@@ -10,11 +10,4 @@ import {
 export class DriverController {
   @Inject(DriverService)
   private readonly driverService: DriverService;
-
-  @GET('/is-premium', {
-    onRequest: [hasBearerToken, userIsAuthenticated],
-  })
-  async getIsPremium(request: Request, reply: Reply) {
-    return this.driverService.isPremium(request.driver?.id!);
-  }
 }
