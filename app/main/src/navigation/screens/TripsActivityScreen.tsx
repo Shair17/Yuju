@@ -1,5 +1,6 @@
 import React from 'react';
 import {Div, Text} from 'react-native-magnus';
+import {FlashList} from '@shopify/flash-list';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {
   ProfileStackParams,
@@ -9,14 +10,25 @@ import {
 interface Props
   extends NativeStackScreenProps<ProfileStackParams, 'TripsActivityScreen'> {}
 
+const DATA = [
+  {
+    title: 'First Item',
+  },
+  {
+    title: 'Second Item',
+  },
+];
+
 export const TripsActivityScreen: React.FC<Props> = ({navigation}) => {
-  const navigateTo = (screen: ProfileStackParamsValue) => {
-    navigation.navigate(screen);
+  const navigateTo = (screen: ProfileStackParamsValue, params?: any) => {
+    navigation.navigate(screen, params);
   };
 
   return (
-    <Div bg="body">
-      <Text>TripsActivityScreen</Text>
-    </Div>
+    <FlashList
+      data={DATA}
+      renderItem={({item}) => <Text>{item.title}</Text>}
+      estimatedItemSize={200}
+    />
   );
 };

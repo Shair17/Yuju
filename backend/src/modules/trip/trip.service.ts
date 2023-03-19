@@ -34,6 +34,7 @@ export class TripService {
     return {
       driver: {
         id: driver.id,
+        name: driver.profile.name,
         avatar: driver.profile.avatar,
         createdAt: driver.createdAt,
         // resumen del mototaxista

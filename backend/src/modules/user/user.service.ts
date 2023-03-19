@@ -173,6 +173,7 @@ export class UserService {
         facebookId: true,
         facebookAccessToken: true,
         availability: true,
+        isAdmin: true,
         createdAt: true,
         updatedAt: true,
       },

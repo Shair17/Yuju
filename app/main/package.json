@@ -21,6 +21,7 @@
     "@react-navigation/material-top-tabs": "^6.5.2",
     "@react-navigation/native": "^6.1.2",
     "@react-navigation/native-stack": "^6.9.8",
+    "@shopify/flash-list": "^1.4.1",
     "axios": "^1.2.2",
     "axios-hooks": "^4.0.0",
     "jwt-decode": "^3.1.2",

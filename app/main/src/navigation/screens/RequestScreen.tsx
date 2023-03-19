@@ -16,12 +16,13 @@ import NumericInput from 'react-native-numeric-input';
 import {RequestScreenAskExtraInfo} from '@yuju/components/organisms/RequestScreenAskExtraInfo';
 import {RequestScreenAskAddressesSeparator} from '@yuju/components/organisms/RequestScreenAskAddressesSeparator';
 import {RequestScreenAskAddressItem} from '@yuju/components/organisms/RequestScreenAskAddressItem';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
 
 interface Props
   extends NativeStackScreenProps<RequestStackParams, 'RequestScreen'> {}
 
 export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
-  const [price, setPrice] = useState<number>(2);
+  const [price, setPrice] = useState<number>(3);
   const [passengersCount, setPassengersCount] = useState<number>(1);
   const [currentAddress, setCurrentAddress] = useState<string | null>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -46,6 +47,7 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
   const mapRef = useRef<MapView>();
   const mapReady = useRef<boolean>(false);
   const following = useRef<boolean>(true);
+  const socket = useSocketStore(s => s.socket);
 
   // const handleSheetChanges = useCallback((index: number) => {
   // console.log('handleSheetChanges', index);
@@ -107,6 +109,14 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
       center: {latitude, longitude},
     });
   }, [userLocation]);
+
+  useEffect(() => {
+    socket?.emit('PASSENGER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('PASSENGER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   if (gpsAccessDenied) {
     return <GPSAccessDenied onButtonPress={callGetCurrentLocation} />;
@@ -270,7 +280,7 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
                   value={price}
                   onChange={setPrice}
                   editable={false}
-                  minValue={1}
+                  minValue={2}
                   step={0.5}
                   rounded
                   valueType="real"

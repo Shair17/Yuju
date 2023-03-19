@@ -1,8 +1,9 @@
-import React, {Fragment, useState} from 'react';
+import React, {Fragment, useState, useEffect} from 'react';
 import {
   TouchableOpacity,
   TouchableNativeFeedback,
   StatusBar,
+  Alert,
 } from 'react-native';
 import {
   Div,
@@ -56,8 +57,10 @@ export const EditProfileScreen: React.FC<Props> = ({navigation}) => {
     handleSubmit,
     formState,
     control,
+    watch,
     avatarToSend,
     avatarImageForEditProfile,
+    handleShowSaveInfo,
   } = useEditProfile({
     formDefaultValues: {
       dni: myProfile?.user.profile.dni,
@@ -82,6 +85,14 @@ export const EditProfileScreen: React.FC<Props> = ({navigation}) => {
   const [birthDateMonth, birthDateDay, birthDateYear] = date
     .toLocaleDateString()
     .split('/');
+  const hasUnsavedChanges =
+    formState.isValid &&
+    !!myProfile &&
+    (myProfile.user.profile.email !== watch('email') ||
+      myProfile.user.profile.dni !== watch('dni') ||
+      myProfile.user.profile.phoneNumber !== watch('phone') ||
+      myProfile.user.profile.avatar !== avatarImageForEditProfile.uri ||
+      new Date(myProfile.user.profile.birthDate!).getTime() !== date.getTime());
 
   const handleSave = handleSubmit(data => {
     const age = getAgeFromDate(date);
@@ -105,13 +116,41 @@ export const EditProfileScreen: React.FC<Props> = ({navigation}) => {
       .then(response => {
         if (response.data.modified) {
           mutateMyProfile();
-          navigation.goBack();
-        } else {
-          navigation.goBack();
         }
+
+        handleShowSaveInfo();
+
+        navigation.goBack();
       })
-      .catch(console.log);
+      .catch(() => navigation.goBack());
   });
+
+  useEffect(
+    () =>
+      navigation.addListener('beforeRemove', e => {
+        if (!hasUnsavedChanges) {
+          return;
+        }
+
+        e.preventDefault();
+
+        Alert.alert(
+          'Descartar cambios?',
+          'Tienes cambios sin guardar, seguro que quieres irte sin guardarlos?',
+          [
+            {text: 'No', style: 'cancel', onPress: () => {}},
+            {
+              text: 'Sí',
+              style: 'destructive',
+              // If the user confirmed, then we dispatch the action we blocked earlier
+              // This will continue the action that had triggered the removal of the screen
+              onPress: () => navigation.dispatch(e.data.action),
+            },
+          ],
+        );
+      }),
+    [navigation, hasUnsavedChanges],
+  );
 
   return (
     <Fragment>

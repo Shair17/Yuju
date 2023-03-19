@@ -1,5 +1,6 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {useTheme} from 'react-native-magnus';
 import {ProfileScreen} from '../screens/ProfileScreen';
 import {AskHelpScreen} from '../screens/AskHelpScreen';
 import {ReportBugScreen} from '../screens/ReportBugScreen';
@@ -14,7 +15,7 @@ import {ThemeScreen} from '../screens/ThemeScreen';
 import {TripsActivityScreen} from '../screens/TripsActivityScreen';
 import {MyReferralsScreen} from '../screens/MyReferralsScreen';
 import {ReferralsScreen} from '../screens/ReferralsScreen';
-import {useTheme} from 'react-native-magnus';
+import {MeetYourDriverScreen} from '../screens/MeetYourDriverScreen';
 
 export type ProfileStackParams = {
   ProfileScreen: undefined;
@@ -25,6 +26,9 @@ export type ProfileStackParams = {
   MyReferralsScreen: undefined;
   ThemeScreen: undefined;
   TripsActivityScreen: undefined;
+  MeetYourDriverScreen: {
+    id: string;
+  };
   ReportsActivityScreen: undefined;
   DriversBookmarkScreen: undefined;
   AddressesBookmarkScreen: undefined;
@@ -109,6 +113,13 @@ export const ProfileStackScreen = () => {
         component={TripsActivityScreen}
         options={{
           title: 'Mis Viajes',
+        }}
+      />
+      <ProfileStack.Screen
+        name="MeetYourDriverScreen"
+        component={MeetYourDriverScreen}
+        options={{
+          title: 'Conoce a tu Mototaxista',
         }}
       />
       <ProfileStack.Screen

@@ -1,5 +1,7 @@
 import {Service} from 'fastify-decorators';
-import jwt from 'jsonwebtoken';
+import jwt, {JwtPayload as IJwtPayload} from 'jsonwebtoken';
+
+export type JwtPayload = IJwtPayload;
 
 export class JsonWebTokenError extends jwt.JsonWebTokenError {}
 export class NotBeforeError extends jwt.NotBeforeError {}

@@ -36,6 +36,7 @@ Table users {
   availabilityId String [not null]
   accessToken String
   refreshToken String
+  isAdmin Boolean [not null, default: false]
   referralCode String [unique, not null]
   referredBy users
   referredById String

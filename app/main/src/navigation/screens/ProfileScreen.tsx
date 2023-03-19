@@ -1,6 +1,14 @@
 import React from 'react';
 import {TouchableNativeFeedback, StatusBar} from 'react-native';
-import {Div, Text, Avatar, Image, Button, Icon} from 'react-native-magnus';
+import {
+  Div,
+  Text,
+  Avatar,
+  Image,
+  Button,
+  Icon,
+  Skeleton,
+} from 'react-native-magnus';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import * as Animatable from 'react-native-animatable';
 import {
@@ -26,8 +34,8 @@ export const ProfileScreen: React.FC<Props> = ({navigation}) => {
     url: '/users/me',
   });
 
-  const navigateTo = (screen: ProfileStackParamsValue) => {
-    navigation.navigate(screen);
+  const navigateTo = (screen: ProfileStackParamsValue, params?: any) => {
+    navigation.navigate(screen, params);
   };
 
   return (
@@ -108,7 +116,9 @@ export const ProfileScreen: React.FC<Props> = ({navigation}) => {
         <Div mb="lg">
           <ProfileSettingTitle title="Anuncio" />
 
+          <Skeleton bg="#eee" mt="md" rounded="lg" h={150} />
           <Div
+            style={{display: 'none'}}
             rounded="lg"
             px="xl"
             py="lg"

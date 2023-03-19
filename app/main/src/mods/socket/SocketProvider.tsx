@@ -15,6 +15,10 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({
 
   useEffect(() => {
     setSocket(accessToken);
+
+    return () => {
+      socket?.disconnect();
+    };
   }, [accessToken]);
 
   useEffect(() => {

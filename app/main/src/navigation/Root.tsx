@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {useTheme} from 'react-native-magnus';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {OnBoardingScreen} from './screens/OnBoardingScreen';
@@ -23,6 +23,7 @@ import {usePermissionsStore} from '@yuju/global-stores/usePermissionsStore';
 import {useIsNew} from '@yuju/global-hooks/useIsNew';
 import {MinigameScreen} from './screens/MinigameScreen';
 import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {useLocation} from '@yuju/global-hooks/useLocation';
 
 export type RootStackParams = {
   /**
@@ -70,9 +71,11 @@ export const Root: React.FC = () => {
   const isNew = useIsNew();
   const locationStatus = usePermissionsStore(s => s.locationStatus);
   const isConnected = useIsConnected();
+  const socket = useSocketStore(s => s.socket);
   const socketStatus = useSocketStore(s => s.status);
   const appShouldUpdate = useShouldUpdate();
   const {theme} = useTheme();
+  const {userLocation} = useLocation();
   const appIsLoading =
     locationStatus === 'unavailable' ||
     isConnected === 'loading' ||
@@ -81,6 +84,16 @@ export const Root: React.FC = () => {
   const appHasErrors =
     isConnected === 'disconnected' || socketStatus === 'offline';
   // appShouldUpdate === 'error';
+
+  useEffect(() => {
+    if (!isAuthenticated || isNew) return;
+
+    socket?.emit('PASSENGER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('PASSENGER_LOCATION');
+    };
+  }, [socket, isAuthenticated, isNew, userLocation]);
 
   return (
     <RootStack.Navigator

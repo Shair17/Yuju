@@ -14,15 +14,36 @@ import {
   CreateUserReportBugBody,
   CreateUserReportBugBodyType,
 } from './schemas/create-user-report-bug.body';
+import {
+  GetDriverBugReportsQuery,
+  GetDriverBugReportsQueryType,
+} from './schemas/get-driver-bug-reports.query';
+import {
+  GetUserBugReportsQuery,
+  GetUserBugReportsQueryType,
+} from './schemas/get-user-bug-reports.query';
 
 @Controller('/v1/bug-reports')
 export class BugReportController {
   @Inject(BugReportService)
   private readonly bugReportService: BugReportService;
 
-  @GET('/')
-  async getBugReports() {
-    return this.bugReportService.getAll();
+  @GET('/users', {
+    onRequest: [hasBearerToken, userIsAuthenticated],
+    schema: {
+      querystring: GetUserBugReportsQuery,
+    },
+  })
+  async getUserBugReports(
+    request: Request<{
+      Querystring: GetUserBugReportsQueryType;
+    }>,
+    reply: Reply,
+  ) {
+    return this.bugReportService.getUserBugReports(
+      request.user?.id!,
+      request.query,
+    );
   }
 
   @POST('/users', {
@@ -40,6 +61,24 @@ export class BugReportController {
     return this.bugReportService.createUserBugReport(
       request.user?.id!,
       request.body,
+    );
+  }
+
+  @GET('/drivers', {
+    onRequest: [hasBearerToken, driverIsAuthenticated],
+    schema: {
+      querystring: GetDriverBugReportsQuery,
+    },
+  })
+  async getDriverBugReports(
+    request: Request<{
+      Querystring: GetDriverBugReportsQueryType;
+    }>,
+    reply: Reply,
+  ) {
+    return this.bugReportService.getDriverBugReports(
+      request.user?.id!,
+      request.query,
     );
   }
 

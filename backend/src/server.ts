@@ -10,6 +10,7 @@ import RateLimitPlugin from '@fastify/rate-limit';
 // import HelmetPlugin from '@fastify/helmet';
 import SocketIOPlugin from 'fastify-socket.io';
 import CompressPlugin from '@fastify/compress';
+import StaticPlugin from '@fastify/static';
 // import PrismaPlugin from './common/plugins/prisma';
 import GracefulExitPlugin from '@mgcrea/fastify-graceful-exit';
 // import ShutdownPlugin from './common/plugins/shutdown';
@@ -38,6 +39,9 @@ export default async function Server(
     schema: ConfigSchema,
   });
   app.register(GracefulExitPlugin);
+  app.register(StaticPlugin, {
+    root: join(cwd(), 'public'),
+  });
   app.register(NoIconPlugin);
   app.register(CompressPlugin);
   // app.register(HelmetPlugin, {

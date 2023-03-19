@@ -11,6 +11,7 @@ import {useRequest} from '../../global-hooks/useRequest';
 import {GetMyProfile} from '../../types/app';
 import {wait} from '@yuju/common/utils/time';
 import {useDimensions} from '@yuju/global-hooks/useDimensions';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
 
 export const HomeScreenCurrentLocation: React.FC = () => {
   const [currentAddress, setCurrentAddress] = useState<string | null>(null);
@@ -25,6 +26,7 @@ export const HomeScreenCurrentLocation: React.FC = () => {
     window: {width: windowWidth, height: windowHeight},
   } = useDimensions();
   const [, setClipboard] = useClipboard();
+  const socket = useSocketStore(s => s.socket);
   const {
     userLocation,
     initialPosition,
@@ -118,6 +120,14 @@ export const HomeScreenCurrentLocation: React.FC = () => {
       center: {latitude, longitude},
     });
   }, [userLocation]);
+
+  useEffect(() => {
+    socket?.emit('PASSENGER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('PASSENGER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   return (
     <Div mt="lg" alignItems="center">

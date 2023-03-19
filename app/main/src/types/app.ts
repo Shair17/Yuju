@@ -33,10 +33,40 @@ export interface GetMyProfile {
     id: string;
     profile: Profile;
     availability: Availability;
+    isAdmin: boolean;
     facebookId: string;
     facebookAccessToken: string;
     createdAt: string;
     updatedAt: string;
+  };
+}
+
+export interface MyDriverProfile {
+  driver: {
+    id: string;
+    name: string;
+    avatar: string;
+    createdAt: string;
+    summary: string;
+    completedTrips: number;
+    rankingsTotal: number;
+    vehiclesPhotos: string[];
+    rankings: {
+      id: string;
+      comment: string | null;
+      value: number;
+      createdAt: string;
+      user: {
+        id: string;
+        avatar: string;
+        name: string;
+      };
+    }[];
+    rankingsAverage: number;
+  };
+  user: {
+    id: string;
+    name: string;
   };
 }
 

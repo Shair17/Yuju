@@ -1,4 +1,5 @@
 import {Type, Static} from '@sinclair/typebox';
+import {PROFIT_PERCENTAGE_PER_TRIP} from '../common/constants/app';
 
 // NODE_ENV -> 'development', 'production', 'test', 'provision'
 
@@ -39,6 +40,10 @@ const ConfigSchema = Type.Strict(
 
       TWILIO_ACCOUNT_SID: Type.String(),
       TWILIO_AUTH_TOKEN: Type.String(),
+
+      PROFIT_PERCENTAGE_PER_TRIP: Type.Number({
+        default: PROFIT_PERCENTAGE_PER_TRIP,
+      }),
     },
     {
       additionalProperties: false,

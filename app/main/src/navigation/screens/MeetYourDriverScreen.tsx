@@ -1,11 +1,11 @@
-import React, {useState} from 'react';
+import React, {useState, Fragment} from 'react';
 import {StatusBar, TouchableOpacity} from 'react-native';
-import {Div, Text, Avatar, Button, Icon, Image} from 'react-native-magnus';
+import {Div, Text, Avatar, Icon, Image} from 'react-native-magnus';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RequestStackParams} from '../bottom-tabs/RequestStackScreen';
 import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';
 import {useRequest} from '@yuju/global-hooks/useRequest';
-import {GetMyProfile} from '@yuju/types/app';
+import {MyDriverProfile} from '@yuju/types/app';
 import {useDimensions} from '@yuju/global-hooks/useDimensions';
 import {PhotoPreviewOverlay} from '@yuju/components/atoms/PhotoPreviewOverlay';
 import Carousel from 'react-native-reanimated-carousel';
@@ -18,11 +18,11 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
   const driverId = route.params.id;
   const [photoPreviewOverlayVisible, setPhotoPreviewOverlayVisible] =
     useState<boolean>(false);
-  const {data: myProfile} = useRequest<GetMyProfile>({
+  const {data: myDriverProfile} = useRequest<MyDriverProfile>({
     method: 'GET',
-    url: `/users/me`,
+    url: `/trips/meet-your-driver/${driverId}`,
   });
-  const [photo, setPhoto] = useState(myProfile?.user.profile.avatar);
+  const [photo, setPhoto] = useState(myDriverProfile?.driver.avatar);
   const {
     window: {width: windowWidth},
   } = useDimensions();
@@ -44,7 +44,7 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
         <Div justifyContent="center" alignItems="center">
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() => openPhotoOverlay(myProfile?.user.profile.avatar!)}
+            onPress={() => openPhotoOverlay(myDriverProfile?.driver.avatar!)}
             style={{
               borderRadius: 100,
             }}>
@@ -62,14 +62,14 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
                 rounded="circle"
                 bg="gray100"
                 source={{
-                  uri: myProfile?.user.profile.avatar,
+                  uri: myDriverProfile?.driver.avatar,
                 }}
               />
             </Div>
           </TouchableOpacity>
           <Div mt="md">
             <Text fontWeight="600" fontSize="5xl">
-              {myProfile?.user.profile.name}
+              {myDriverProfile?.driver.name}
             </Text>
 
             <Div row mt="md" alignItems="center" justifyContent="center">
@@ -83,13 +83,13 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
                   mr="xs"
                 />
                 <Text fontWeight="600" color="gray600" fontSize="lg">
-                  5
+                  {myDriverProfile?.driver.rankingsAverage ?? '0'}
                 </Text>
               </Div>
               <Text color="gray300">•</Text>
               <Div row ml="md">
                 <Text fontWeight="600" color="gray600" fontSize="lg">
-                  230 Calificaciones
+                  {myDriverProfile?.driver.rankingsTotal ?? '0'} Calificaciones
                 </Text>
               </Div>
             </Div>
@@ -113,7 +113,7 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
                 fontWeight="bold"
                 color="gray900"
                 numberOfLines={1}>
-                120
+                {myDriverProfile?.driver.completedTrips ?? '0'}
               </Text>
               <Text fontSize="sm" color="gray500" numberOfLines={1}>
                 Carreras hechas
@@ -137,7 +137,7 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
                 fontWeight="bold"
                 color="gray900"
                 numberOfLines={1}>
-                {formatDate(new Date(myProfile?.user.createdAt!))}
+                {formatDate(new Date(myDriverProfile?.driver.createdAt!))}
               </Text>
               <Text fontSize="sm" color="gray500" numberOfLines={1}>
                 se unió a Yuju
@@ -162,10 +162,14 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
             borderColor="gray50">
             {/** Solo permitir 30 caracteres */}
             <Text fontSize="lg" color="gray600">
-              ¡Hola! Soy un mototaxista confiable y seguro, disponible para
+              {myDriverProfile?.driver.summary ??
+                `${
+                  myDriverProfile?.driver.name ?? 'El mototaxista'
+                } no agregó un resumen.`}
+              {/* ¡Hola! Soy un mototaxista confiable y seguro, disponible para
               llevarte a cualquier destino en la ciudad. Mi mototaxi es cómodo y
               rápido, y siempre llegaré a tiempo. ¡Haz tu reserva ahora y
-              disfruta de un viaje sin problemas!
+              disfruta de un viaje sin problemas! */}
             </Text>
           </Div>
         </Div>
@@ -190,21 +194,18 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
               width={windowWidth}
               style={{flex: 1}}
               autoPlay={true}
-              data={[
-                {path: require('@yuju/assets/images/mototaxis/1.png')},
-                {path: require('@yuju/assets/images/mototaxis/2.png')},
-                {path: require('@yuju/assets/images/mototaxis/3.png')},
-              ]}
+              data={myDriverProfile?.driver.vehiclesPhotos ?? []}
               scrollAnimationDuration={1000}
-              renderItem={({index, item}) => (
+              renderItem={({index, item: photo}) => (
                 <TouchableOpacity
+                  key={index.toString()}
                   activeOpacity={0.9}
-                  onPress={() => openPhotoOverlay(item.path)}
+                  onPress={() => openPhotoOverlay(photo)}
                   style={{
                     flex: 1,
                     borderRadius: 100,
                   }}>
-                  <Image flex={1} rounded="lg" source={item.path} />
+                  <Image flex={1} rounded="lg" source={{uri: photo}} />
                 </TouchableOpacity>
               )}
             />
@@ -227,245 +228,72 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
             </Div>
             {/** Ratings Items */}
             <Div>
-              <Div row p="lg" justifyContent="space-between">
-                <Avatar
-                  size={45}
-                  source={{uri: myProfile?.user.profile.avatar}}
-                />
-                <Div flex={1} ml="md">
-                  <Text numberOfLines={1} fontSize="lg" fontWeight="600">
-                    Jimmy Morales
-                  </Text>
-                  <Div
-                    row
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mt="xs">
-                    <Div row>
-                      <Icon
-                        fontFamily="Ionicons"
-                        name="star"
-                        color="#f4c150"
-                        fontSize="xs"
-                        mr={3}
-                      />
-                      <Text fontWeight="600" color="gray600" fontSize="xs">
-                        5
-                      </Text>
+              {myDriverProfile?.driver.rankings.map((ranking, index) => {
+                const shouldRenderSeparator =
+                  index !== myDriverProfile.driver.rankings.length - 1;
+
+                return (
+                  <Fragment key={ranking.id}>
+                    <Div row p="lg" justifyContent="space-between">
+                      <Avatar size={45} source={{uri: ranking.user.avatar}} />
+                      <Div flex={1} ml="md">
+                        <Text numberOfLines={1} fontSize="lg" fontWeight="600">
+                          {ranking.user.name}
+                        </Text>
+                        <Div
+                          row
+                          justifyContent="space-between"
+                          alignItems="center"
+                          mt="xs">
+                          <Div row>
+                            <Icon
+                              fontFamily="Ionicons"
+                              name="star"
+                              color="#f4c150"
+                              fontSize="xs"
+                              mr={3}
+                            />
+                            <Text
+                              fontWeight="600"
+                              color="gray600"
+                              fontSize="xs">
+                              {ranking.value ?? '0'}
+                            </Text>
+                          </Div>
+
+                          <Text fontWeight="500" color="gray400" fontSize="xs">
+                            {formatDate(new Date(ranking.createdAt))}
+                          </Text>
+                        </Div>
+                        <Text numberOfLines={3} mt="sm" color="gray600">
+                          {ranking.comment ??
+                            `${
+                              ranking.user.name ?? 'El pasajero'
+                            } no escribió una reseña.`}
+                          {/* Lorem ipsum dolor sit, amet consectetur adipisicing
+                          elit. Dolorum tenetur maxime veniam repellat, dolor
+                          perspiciatis sint architecto aperiam possimus vero?
+                          Perspiciatis, incidunt libero ut excepturi deserunt et
+                          aperiam a vitae. */}
+                        </Text>
+                      </Div>
                     </Div>
 
-                    <Text fontWeight="500" color="gray400" fontSize="xs">
-                      hace 1 semana
-                    </Text>
-                  </Div>
-                  <Text numberOfLines={3} mt="sm" color="gray600">
-                    Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                    Dolorum tenetur maxime veniam repellat, dolor perspiciatis
-                    sint architecto aperiam possimus vero? Perspiciatis,
-                    incidunt libero ut excepturi deserunt et aperiam a vitae.
-                  </Text>
-                </Div>
-              </Div>
+                    {/** Separator */}
 
-              {/** Separator */}
-              <Div
-                my="md"
-                borderWidth={1}
-                borderStyle="dashed"
-                borderColor="gray50"
-                rounded="circle"
-                mx="lg"
-              />
-
-              <Div row p="lg" justifyContent="space-between">
-                <Avatar
-                  size={45}
-                  source={{uri: myProfile?.user.profile.avatar}}
-                />
-                <Div flex={1} ml="md">
-                  <Text numberOfLines={1} fontSize="lg" fontWeight="600">
-                    Jimmy Morales
-                  </Text>
-                  <Div
-                    row
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mt="xs">
-                    <Div row>
-                      <Icon
-                        fontFamily="Ionicons"
-                        name="star"
-                        color="#f4c150"
-                        fontSize="xs"
-                        mr={3}
+                    {shouldRenderSeparator ? (
+                      <Div
+                        my="md"
+                        borderWidth={1}
+                        borderStyle="dashed"
+                        borderColor="gray50"
+                        rounded="circle"
+                        mx="lg"
                       />
-                      <Text fontWeight="600" color="gray600" fontSize="xs">
-                        5
-                      </Text>
-                    </Div>
-
-                    <Text fontWeight="500" color="gray400" fontSize="xs">
-                      hace 1 semana
-                    </Text>
-                  </Div>
-                  <Text numberOfLines={3} mt="sm" color="gray600">
-                    Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                    Dolorum tenetur maxime veniam repellat, dolor perspiciatis
-                    sint architecto aperiam possimus vero? Perspiciatis,
-                    incidunt libero ut excepturi deserunt et aperiam a vitae.
-                  </Text>
-                </Div>
-              </Div>
-
-              {/** Separator */}
-              <Div
-                my="md"
-                borderWidth={1}
-                borderStyle="dashed"
-                borderColor="gray50"
-                rounded="circle"
-                mx="lg"
-              />
-
-              <Div row p="lg" justifyContent="space-between">
-                <Avatar
-                  size={45}
-                  source={{uri: myProfile?.user.profile.avatar}}
-                />
-                <Div flex={1} ml="md">
-                  <Text numberOfLines={1} fontSize="lg" fontWeight="600">
-                    Jimmy Morales
-                  </Text>
-                  <Div
-                    row
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mt="xs">
-                    <Div row>
-                      <Icon
-                        fontFamily="Ionicons"
-                        name="star"
-                        color="#f4c150"
-                        fontSize="xs"
-                        mr={3}
-                      />
-                      <Text fontWeight="600" color="gray600" fontSize="xs">
-                        5
-                      </Text>
-                    </Div>
-
-                    <Text fontWeight="500" color="gray400" fontSize="xs">
-                      hace 1 semana
-                    </Text>
-                  </Div>
-                  <Text numberOfLines={3} mt="sm" color="gray600">
-                    Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                    Dolorum tenetur maxime veniam repellat, dolor perspiciatis
-                    sint architecto aperiam possimus vero? Perspiciatis,
-                    incidunt libero ut excepturi deserunt et aperiam a vitae.
-                  </Text>
-                </Div>
-              </Div>
-
-              {/** Separator */}
-              <Div
-                my="md"
-                borderWidth={1}
-                borderStyle="dashed"
-                borderColor="gray50"
-                rounded="circle"
-                mx="lg"
-              />
-
-              <Div row p="lg" justifyContent="space-between">
-                <Avatar
-                  size={45}
-                  source={{uri: myProfile?.user.profile.avatar}}
-                />
-                <Div flex={1} ml="md">
-                  <Text numberOfLines={1} fontSize="lg" fontWeight="600">
-                    Jimmy Morales
-                  </Text>
-                  <Div
-                    row
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mt="xs">
-                    <Div row>
-                      <Icon
-                        fontFamily="Ionicons"
-                        name="star"
-                        color="#f4c150"
-                        fontSize="xs"
-                        mr={3}
-                      />
-                      <Text fontWeight="600" color="gray600" fontSize="xs">
-                        5
-                      </Text>
-                    </Div>
-
-                    <Text fontWeight="500" color="gray400" fontSize="xs">
-                      hace 1 semana
-                    </Text>
-                  </Div>
-                  <Text numberOfLines={3} mt="sm" color="gray600">
-                    Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                    Dolorum tenetur maxime veniam repellat, dolor perspiciatis
-                    sint architecto aperiam possimus vero? Perspiciatis,
-                    incidunt libero ut excepturi deserunt et aperiam a vitae.
-                  </Text>
-                </Div>
-              </Div>
-
-              {/** Separator */}
-              <Div
-                my="md"
-                borderWidth={1}
-                borderStyle="dashed"
-                borderColor="gray50"
-                rounded="circle"
-                mx="lg"
-              />
-
-              <Div row p="lg" justifyContent="space-between">
-                <Avatar
-                  size={45}
-                  source={{uri: myProfile?.user.profile.avatar}}
-                />
-                <Div flex={1} ml="md">
-                  <Text numberOfLines={1} fontSize="lg" fontWeight="600">
-                    Jimmy Morales
-                  </Text>
-                  <Div
-                    row
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mt="xs">
-                    <Div row>
-                      <Icon
-                        fontFamily="Ionicons"
-                        name="star"
-                        color="#f4c150"
-                        fontSize="xs"
-                        mr={3}
-                      />
-                      <Text fontWeight="600" color="gray600" fontSize="xs">
-                        5
-                      </Text>
-                    </Div>
-
-                    <Text fontWeight="500" color="gray400" fontSize="xs">
-                      hace 1 semana
-                    </Text>
-                  </Div>
-                  <Text numberOfLines={3} mt="sm" color="gray600">
-                    Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                    Dolorum tenetur maxime veniam repellat, dolor perspiciatis
-                    sint architecto aperiam possimus vero? Perspiciatis,
-                    incidunt libero ut excepturi deserunt et aperiam a vitae.
-                  </Text>
-                </Div>
-              </Div>
+                    ) : null}
+                  </Fragment>
+                );
+              })}
             </Div>
           </Div>
         </Div>

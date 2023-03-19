@@ -6,7 +6,7 @@ import {GetDriverRatingsQueryType} from './schemas/get-driver-rating.query';
 import {DriverService} from '../driver/driver.service';
 import {CreateUserRatingsBodyType} from './schemas/create-user-rating.body';
 import {CreateDriverRatingsBodyType} from './schemas/create-driver-rating.body';
-import {TripService} from '../trip/trip.service';
+// import {TripService} from '../trip/trip.service';
 
 @Service('RatingServiceToken')
 export class RatingService {
@@ -19,8 +19,8 @@ export class RatingService {
   @Inject(DriverService)
   private readonly driverService: DriverService;
 
-  @Inject(TripService)
-  private readonly tripService: TripService;
+  // @Inject(TripService)
+  // private readonly tripService: TripService;
 
   // Get all rankings for users
   async getUsersCount(): Promise<number> {
@@ -221,7 +221,7 @@ export class RatingService {
     const [user, driver] = await Promise.all([
       this.userService.findByIdOrThrow(id),
       this.driverService.findByIdOrThrow(data.driverId),
-      this.tripService.findByIdOrThrow(data.tripId),
+      // this.tripService.findByIdOrThrow(data.tripId),
     ]);
 
     const createdRating = await this.databaseService.rating.create({
@@ -245,10 +245,10 @@ export class RatingService {
   }
 
   async createDriverRating(id: string, data: CreateDriverRatingsBodyType) {
-    const [driver, user, trip] = await Promise.all([
+    const [driver, user] = await Promise.all([
       this.driverService.findByIdOrThrow(id),
       this.userService.findByIdOrThrow(data.userId),
-      this.tripService.findByIdOrThrow(data.tripId),
+      // this.tripService.findByIdOrThrow(data.tripId),
     ]);
 
     const createdRating = await this.databaseService.rating.create({

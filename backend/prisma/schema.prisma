@@ -48,7 +48,6 @@ model Availability {
   @@map("availabilities")
 }
 
-// Agregar si User es admin :)
 model User {
   id String @id @default(cuid())
 
@@ -63,6 +62,8 @@ model User {
 
   accessToken  String? @map("access_token") @db.VarChar(1024)
   refreshToken String? @map("refresh_token") @db.VarChar(1024)
+
+  isAdmin Boolean @default(false) @map("is_admin")
 
   referralCode  String  @unique
   referredBy    User?   @relation("ReferredBy", fields: [referredById], references: [id])

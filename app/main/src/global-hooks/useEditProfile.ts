@@ -44,7 +44,7 @@ export const useEditProfile = ({formDefaultValues}: Props = {}) => {
     method: 'GET',
     url: '/users/me',
   });
-  const {control, handleSubmit, formState} = useForm<FormDataValues>({
+  const {control, handleSubmit, formState, watch} = useForm<FormDataValues>({
     resolver: zodResolver(schemaValidator),
     defaultValues: formDefaultValues,
   });
@@ -151,8 +151,19 @@ export const useEditProfile = ({formDefaultValues}: Props = {}) => {
     });
   };
 
+  const handleShowSaveInfo = (
+    message: string = 'Tus cambios fueron guardados.',
+  ) => {
+    Notifier.showNotification({
+      title: 'Yuju',
+      description: message,
+    });
+  };
+
   return {
+    handleShowSaveInfo,
     control,
+    watch,
     handleSubmit,
     formState,
     avatar,

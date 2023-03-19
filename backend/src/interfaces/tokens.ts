@@ -7,6 +7,7 @@ export type AuthTokenPayload = {
   email: string | null;
   phoneNumber: string | null;
   dni: string | null;
+  avatar: string;
 };
 
 export type Tokens = {

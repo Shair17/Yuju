@@ -69,6 +69,7 @@ export class AuthService {
         dni: createdUser.profile.dni,
         email: createdUser.profile.email,
         phoneNumber: createdUser.profile.phoneNumber,
+        avatar: createdUser.profile.avatar,
       };
 
       const {accessToken, refreshToken} = this.tokenService.generateTokens(
@@ -108,6 +109,7 @@ export class AuthService {
       dni: user.profile.dni,
       email: user.profile.email,
       phoneNumber: user.profile.phoneNumber,
+      avatar: user.profile.avatar,
     };
 
     const {accessToken, refreshToken} = this.tokenService.generateTokens(
@@ -147,6 +149,7 @@ export class AuthService {
       dni: user.profile.dni,
       email: user.profile.email,
       phoneNumber: user.profile.phoneNumber,
+      avatar: user.profile.avatar,
     };
 
     const accessToken = this.tokenService.generateAccessToken('user', payload);

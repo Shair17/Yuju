@@ -137,6 +137,7 @@ export const userIsAuthenticated: onRequestHookHandler = async (
     dni: user.profile.dni,
     email: user.profile.email,
     phoneNumber: user.profile.phoneNumber,
+    avatar: user.profile.avatar,
   };
 };
 
@@ -176,5 +177,6 @@ export const driverIsAuthenticated: onRequestHookHandler = async (
     dni: driver.profile.dni,
     email: driver.profile.email,
     phoneNumber: driver.profile.phoneNumber,
+    avatar: driver.profile.avatar,
   };
 };
