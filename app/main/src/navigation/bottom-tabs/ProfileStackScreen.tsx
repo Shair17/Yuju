@@ -154,7 +154,7 @@ export const ProfileStackScreen = () => {
         name="ReportBugScreen"
         component={ReportBugScreen}
         options={{
-          title: 'Reportar un Error',
+          title: 'Reportar un Problema',
         }}
       />
       <ProfileStack.Screen

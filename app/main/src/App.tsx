@@ -16,6 +16,9 @@ import {NotifierWrapper} from 'react-native-notifier';
 import {SocketProvider} from './mods/socket/SocketProvider';
 import {enableLatestRenderer} from 'react-native-maps';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import mobileAds from 'react-native-google-mobile-ads';
+
+mobileAds().initialize();
 
 enableLatestRenderer();
 

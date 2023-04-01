@@ -1,3 +1,9 @@
+export interface Notification {
+  id: string;
+  title: string;
+  description: string;
+}
+
 export interface AppVersionResponse {
   server_name: string;
   server_version: string;
@@ -88,6 +94,89 @@ export interface GetReferralsResponse {
     };
   } | null;
 }
+
+export type MyTrip = {
+  id: string;
+  price: number;
+  passengersQuantity: number;
+  user: {
+    id: string;
+    profile: {
+      name: string;
+      avatar: string;
+    };
+  };
+  driver: {
+    id: string;
+    profile: {
+      name: string;
+      avatar: string;
+    };
+  } | null;
+  rating: number;
+  from: {
+    id: string;
+    address: string | null;
+    latitude: number;
+    longitude: number;
+  };
+  to: {
+    id: string;
+    address: string | null;
+    latitude: number;
+    longitude: number;
+  };
+  status: 'Completed' | 'Pending' | 'Problem' | 'Cancelled';
+  startTime: string | null;
+  endTime: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MyTripsActivityResponse = {
+  data: MyTrip[];
+  page: number;
+  limit: number;
+  totalPages: number;
+  total: number;
+};
+
+export type MyDriver = {
+  id: string;
+  profile: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+  rating: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MyDriversResponse = {
+  data: MyDriver[];
+  page: number;
+  limit: number;
+  totalPages: number;
+  total: number;
+};
+
+export type Report = {
+  id: string;
+  title: string;
+  description: string;
+  extra: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MyReportsActivityResponse = {
+  data: Report[];
+  page: number;
+  limit: number;
+  totalPages: number;
+  total: number;
+};
 
 export type CreateProfileResponse = {
   created: boolean;

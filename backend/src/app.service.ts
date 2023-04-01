@@ -36,6 +36,10 @@ export class AppService {
       await this.databaseService.profile.deleteMany(),
       await this.databaseService.driver.deleteMany(),
       await this.databaseService.availability.deleteMany(),
+      await this.databaseService.bugReport.deleteMany(),
+      await this.databaseService.trip.deleteMany(),
+      await this.databaseService.rating.deleteMany(),
+      await this.databaseService.location.deleteMany(),
     ]);
 
     return res;

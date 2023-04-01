@@ -48,6 +48,11 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
   const mapReady = useRef<boolean>(false);
   const following = useRef<boolean>(true);
   const socket = useSocketStore(s => s.socket);
+  const availableDrivers = useSocketStore(s => s.availableDrivers);
+  const isInRide = useSocketStore(s => s.isInRide);
+  const isInPendingRide = useSocketStore(s => s.isInPendingRide);
+
+  console.log({isInRide, isInPendingRide});
 
   // const handleSheetChanges = useCallback((index: number) => {
   // console.log('handleSheetChanges', index);
@@ -89,8 +94,16 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
   };
 
   useEffect(() => {
+    socket?.on('LOOKING_FOR_DRIVER', data => console.log(data));
+
+    return () => {
+      socket?.off('LOOKING_FOR_DRIVER');
+    };
+  }, [socket]);
+
+  useEffect(() => {
     fillLocationInputs();
-  }, [userLocation]);
+  }, [userLocation, fillLocationInputs]);
 
   useEffect(() => {
     followUserLocation();
@@ -170,11 +183,26 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
             title={myProfile?.user.profile.name}
             description="Estás aquí">
             <Avatar
-              size={20}
+              size={15}
               rounded="circle"
               source={{uri: myProfile?.user.profile.avatar}}
             />
           </Marker>
+
+          {availableDrivers.map(
+            ({id, name, avatar, location: {latitude, longitude}}) => (
+              <Marker
+                key={id}
+                coordinate={{
+                  latitude,
+                  longitude,
+                }}
+                title={name}
+                description="Mototaxista">
+                <Avatar size={10} rounded="circle" source={{uri: avatar}} />
+              </Marker>
+            ),
+          )}
         </MapView>
         <Button
           position="absolute"
@@ -290,6 +318,7 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
             </Div>
 
             <Button
+              disabled={isInRide || isInPendingRide}
               justifyContent="center"
               alignItems="center"
               alignSelf="center"
@@ -301,6 +330,25 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
               mt="lg"
               rounded="lg"
               onPress={() => {
+                socket?.emit('REQUEST_RIDE', {
+                  passengerId: myProfile?.user.id,
+                  from: {
+                    address: currentAddress,
+                    location: {
+                      latitude: userLocation.latitude,
+                      longitude: userLocation.longitude,
+                    },
+                  },
+                  to: {
+                    address: currentAddress,
+                    location: {
+                      latitude: userLocation.latitude,
+                      longitude: userLocation.longitude,
+                    },
+                  },
+                  passengersQuantity: passengersCount,
+                  ridePrice: price,
+                });
                 // navigation.navigate('MeetYourDriverScreen', {
                 //   id: '123',
                 // })

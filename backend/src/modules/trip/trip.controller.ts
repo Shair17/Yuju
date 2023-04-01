@@ -9,11 +9,30 @@ import {
   GetMeetYourDriverParams,
   GetMeetYourDriverParamsType,
 } from './schemas/meet-your-driver.params.schema';
+import {
+  GetUserTripsQuery,
+  GetUserTripsQueryType,
+} from './schemas/get-user-trips.query';
 
 @Controller('/v1/trips')
 export class TripController {
   @Inject(TripService)
   private readonly tripService: TripService;
+
+  @GET('/users', {
+    onRequest: [hasBearerToken, userIsAuthenticated],
+    schema: {
+      querystring: GetUserTripsQuery,
+    },
+  })
+  async getUserTrips(
+    request: Request<{
+      Querystring: GetUserTripsQueryType;
+    }>,
+    reply: Reply,
+  ) {
+    return this.tripService.getUserTrips(request.user?.id!, request.query);
+  }
 
   @GET('/meet-your-driver/:driverId', {
     onRequest: [hasBearerToken, userIsAuthenticated],

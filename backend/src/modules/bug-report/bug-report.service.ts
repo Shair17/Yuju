@@ -71,11 +71,11 @@ export class BugReportService {
     const totalPages = Math.ceil(totalReports / limit);
 
     return {
-      reports,
+      data: reports,
       page,
       limit,
       totalPages,
-      totalReports,
+      total: totalReports,
     };
   }
 
@@ -107,11 +107,11 @@ export class BugReportService {
     const totalPages = Math.ceil(totalReports / limit);
 
     return {
-      reports,
+      data: reports,
       page,
       limit,
       totalPages,
-      totalReports,
+      total: totalReports,
     };
   }
 

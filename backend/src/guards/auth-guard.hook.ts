@@ -138,6 +138,7 @@ export const userIsAuthenticated: onRequestHookHandler = async (
     email: user.profile.email,
     phoneNumber: user.profile.phoneNumber,
     avatar: user.profile.avatar,
+    isAdmin: user.isAdmin,
   };
 };
 
@@ -178,5 +179,6 @@ export const driverIsAuthenticated: onRequestHookHandler = async (
     email: driver.profile.email,
     phoneNumber: driver.profile.phoneNumber,
     avatar: driver.profile.avatar,
+    isAdmin: driver.isAdmin,
   };
 };

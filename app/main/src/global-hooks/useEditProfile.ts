@@ -44,10 +44,12 @@ export const useEditProfile = ({formDefaultValues}: Props = {}) => {
     method: 'GET',
     url: '/users/me',
   });
-  const {control, handleSubmit, formState, watch} = useForm<FormDataValues>({
-    resolver: zodResolver(schemaValidator),
-    defaultValues: formDefaultValues,
-  });
+  const {control, handleSubmit, formState, watch, setError} =
+    useForm<FormDataValues>({
+      resolver: zodResolver(schemaValidator),
+      defaultValues: formDefaultValues,
+    });
+
   const userPickedAvatar = avatar !== undefined && avatar?.assets !== undefined;
   const avatarImage = userPickedAvatar
     ? {uri: avatar!.assets![0].uri}
@@ -164,6 +166,7 @@ export const useEditProfile = ({formDefaultValues}: Props = {}) => {
     handleShowSaveInfo,
     control,
     watch,
+    setError,
     handleSubmit,
     formState,
     avatar,

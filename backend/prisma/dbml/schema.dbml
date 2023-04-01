@@ -8,7 +8,7 @@ Table profiles {
   email String
   avatar String [not null]
   dni String
-  phoneNumber String [unique]
+  phoneNumber String
   birthDate DateTime
   users users [not null]
   drivers drivers [not null]
@@ -41,8 +41,11 @@ Table users {
   referredBy users
   referredById String
   referredUsers users [not null]
+  trips trips [not null]
   ratings ratings [not null]
   bugReports bug_reports [not null]
+  myDrivers drivers [not null]
+  myAddresses locations [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
 }
@@ -57,14 +60,50 @@ Table drivers {
   availabilityId String [not null]
   accessToken String
   refreshToken String
+  isAdmin Boolean [not null, default: false]
+  trips trips [not null]
   ratings ratings [not null]
   bugReports bug_reports [not null]
+  user users
+  userId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table locations {
+  id String [pk]
+  address String
+  name String
+  street String
+  zip String
+  city String
+  tag LocationTag [not null, default: 'Otro']
+  latitude Float [not null]
+  longitude Float [not null]
+  tripsFrom trips [not null]
+  tripsTo trips [not null]
+  user users
+  userId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
 }
 
 Table trips {
   id String [pk]
+  price Float [not null]
+  passengersQuantity Int [not null, default: 1]
+  from locations [not null]
+  fromId String [not null]
+  to locations [not null]
+  toId String [not null]
+  status TripStatus [not null, default: 'Pending']
+  driver drivers
+  driverId String
+  user users [not null]
+  userId String [not null]
+  startTime DateTime
+  endTime DateTime
+  ratings ratings [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
 }
@@ -77,6 +116,8 @@ Table ratings {
   userId String [not null]
   driver drivers [not null]
   driverId String [not null]
+  trip trips [not null]
+  tripId String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
 }
@@ -101,6 +142,22 @@ Enum PaymentType {
   Other
 }
 
+Enum LocationTag {
+  Casa
+  Amigo
+  Pareja
+  Trabajo
+  Universidad
+  Otro
+}
+
+Enum TripStatus {
+  Completed
+  Pending
+  Problem
+  Cancelled
+}
+
 Ref: users.profileId > profiles.id
 
 Ref: users.availabilityId > availabilities.id
@@ -111,9 +168,23 @@ Ref: drivers.profileId > profiles.id
 
 Ref: drivers.availabilityId > availabilities.id
 
+Ref: drivers.userId > users.id
+
+Ref: locations.userId > users.id
+
+Ref: trips.fromId > locations.id
+
+Ref: trips.toId > locations.id
+
+Ref: trips.driverId > drivers.id
+
+Ref: trips.userId > users.id
+
 Ref: ratings.userId > users.id
 
 Ref: ratings.driverId > drivers.id
+
+Ref: ratings.tripId > trips.id
 
 Ref: bug_reports.userId > users.id
 

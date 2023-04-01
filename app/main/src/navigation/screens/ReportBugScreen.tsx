@@ -51,15 +51,14 @@ export const ReportBugScreen: React.FC<Props> = ({navigation}) => {
     })
       .then(response => {
         if (response.data.created) {
-          navigation.goBack();
           Notifier.showNotification({
             title: 'Reportes',
             description:
               'Tu reporte ha sido enviado, gracias por ayudar a mejorar Yuju.',
           });
-        } else {
-          navigation.goBack();
         }
+
+        navigation.goBack();
       })
       .catch(console.log);
   });
@@ -70,7 +69,7 @@ export const ReportBugScreen: React.FC<Props> = ({navigation}) => {
         {/** Heading Text {title, subtitle} */}
         <Div>
           <Text fontWeight="bold" color="text" fontSize="5xl">
-            Reportar un error y ayuda a mejorar Yuju!
+            Reportar un problema y ayuda a mejorar Yuju!
           </Text>
           <Text mt="md" fontSize="lg" color="gray700">
             Lamentamos que hayas tenido una mala experiencia en nuestra
@@ -202,7 +201,7 @@ export const ReportBugScreen: React.FC<Props> = ({navigation}) => {
 
         <Text mt="md" color="gray700">
           Revisaremos cada reporte que nos enviés, recuerda ser específico con
-          tus reportes de errores.
+          tus reportes.
         </Text>
 
         <Div my="lg" />

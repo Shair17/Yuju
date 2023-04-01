@@ -21,7 +21,7 @@ model Profile {
   email       String?
   avatar      String
   dni         String?
-  phoneNumber String?   @unique @map("phone_number") @db.VarChar(9)
+  phoneNumber String?   @map("phone_number") @db.VarChar(9)
   birthDate   DateTime? @map("birth_date")
 
   users   User[]
@@ -65,14 +65,19 @@ model User {
 
   isAdmin Boolean @default(false) @map("is_admin")
 
-  referralCode  String  @unique
+  referralCode  String  @unique @map("referral_code")
   referredBy    User?   @relation("ReferredBy", fields: [referredById], references: [id])
   referredById  String?
   referredUsers User[]  @relation("ReferredBy")
 
+  trips   Trip[]
   ratings Rating[]
 
   bugReports BugReport[]
+
+  myDrivers Driver[]
+
+  myAddresses Location[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -95,9 +100,15 @@ model Driver {
   accessToken  String? @map("access_token") @db.VarChar(1024)
   refreshToken String? @map("refresh_token") @db.VarChar(1024)
 
+  isAdmin Boolean @default(false) @map("is_admin")
+
+  trips   Trip[]
   ratings Rating[]
 
   bugReports BugReport[]
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -112,8 +123,73 @@ enum PaymentType {
   Other
 }
 
+enum LocationTag {
+  Casa
+  Amigo
+  Pareja
+  Trabajo
+  Universidad
+  Otro
+}
+
+model Location {
+  id String @id @default(cuid())
+
+  // Optional because it can be a trip or saved location for user's or driver's accounts
+  address String?
+  name    String?
+  street  String?
+  zip     String?
+  city    String?
+
+  // By default it's Otro
+  tag LocationTag @default(Otro)
+
+  // Important
+  latitude  Float
+  longitude Float
+
+  tripsFrom Trip[] @relation("from")
+  tripsTo   Trip[] @relation("to")
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("locations")
+}
+
+enum TripStatus {
+  Completed
+  Pending
+  Problem
+  Cancelled
+}
+
 model Trip {
   id String @id @default(cuid())
+
+  price              Float
+  passengersQuantity Int   @default(1) @db.SmallInt
+
+  from   Location @relation("from", fields: [fromId], references: [id])
+  fromId String
+  to     Location @relation("to", fields: [toId], references: [id])
+  toId   String
+
+  status TripStatus @default(Pending)
+
+  driver   Driver? @relation(fields: [driverId], references: [id])
+  driverId String?
+  user     User    @relation(fields: [userId], references: [id])
+  userId   String
+
+  startTime DateTime? @map("start_time")
+  endTime   DateTime? @map("end_time")
+
+  ratings Rating[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -133,6 +209,9 @@ model Rating {
 
   driver   Driver @relation(fields: [driverId], references: [id])
   driverId String
+
+  trip   Trip   @relation(fields: [tripId], references: [id])
+  tripId String
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

@@ -44,11 +44,8 @@ export const HomeScreenCurrentLocation: React.FC = () => {
       userLocation.longitude === defaultUserLocation.longitude &&
       !mapReady.current
     ) {
-      console.log('aun no está listo');
       return;
     }
-
-    console.log('llega');
 
     mapRef.current
       ?.addressForCoordinate(userLocation)

@@ -6,7 +6,7 @@ import {
 
 export const GetDriverRatingsQuery = Type.Object(
   {
-    page: Type.Number({default: DEFAULT_PAGE_PAGINATION}),
+    page: Type.Number({minimum: 1, default: DEFAULT_PAGE_PAGINATION}),
     limit: Type.Number({default: MAX_ITEMS_PER_PAGE_PAGINATION}),
   },
   {

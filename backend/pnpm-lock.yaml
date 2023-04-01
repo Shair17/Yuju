@@ -9,7 +9,7 @@ specifiers:
   '@fastify/routes': ^5.1.0
   '@fastify/static': ^6.9.0
   '@mgcrea/fastify-graceful-exit': ^0.4.0
-  '@prisma/client': ^4.10.1
+  '@prisma/client': ^4.11.0
   '@sinclair/typebox': ^0.25.16
   '@tsconfig/node16': ^1.0.3
   '@typegoose/typegoose': ^10.2.0
@@ -39,11 +39,11 @@ specifiers:
   nodemon: ^2.0.20
   pino-pretty: ^9.1.1
   prettier: ^2.3.2
-  prisma: ^4.10.1
+  prisma: ^4.11.0
   prisma-dbml-generator: ^0.10.0
   reflect-metadata: ^0.1.13
   rimraf: ^3.0.2
-  socket.io: ^4.6.0
+  socket.io: ^4.6.1
   supertest: ^6.1.3
   ts-jest: 28.0.8
   ts-node: ^10.9.1
@@ -62,7 +62,7 @@ dependencies:
   '@fastify/routes': 5.1.0
   '@fastify/static': 6.9.0
   '@mgcrea/fastify-graceful-exit': 0.4.0
-  '@prisma/client': 4.10.1_prisma@4.10.1
+  '@prisma/client': 4.11.0_prisma@4.11.0
   '@sinclair/typebox': 0.25.16
   '@typegoose/typegoose': 10.2.0_mongoose@6.10.0
   argon2: 0.30.2
@@ -72,14 +72,14 @@ dependencies:
   fastify-decorators: 3.15.0_tmppcy6p3i4gfgzzeq2g7q6hpy
   fastify-http-errors-enhanced: 4.1.0
   fastify-plugin: 4.4.0
-  fastify-socket.io: 4.0.0_socket.io@4.6.0
+  fastify-socket.io: 4.0.0_socket.io@4.6.1
   http-errors: 2.0.0
   jsonwebtoken: 9.0.0
   mongoose: 6.10.0
   nanoid: 3.3.4
   reflect-metadata: 0.1.13
   rimraf: 3.0.2
-  socket.io: 4.6.0
+  socket.io: 4.6.1
   twilio: 3.84.0
 
 devDependencies:
@@ -98,7 +98,7 @@ devDependencies:
   nodemon: 2.0.20
   pino-pretty: 9.1.1
   prettier: 2.8.1
-  prisma: 4.10.1
+  prisma: 4.11.0
   prisma-dbml-generator: 0.10.0
   supertest: 6.3.3
   ts-jest: 28.0.8_ra2f52bqkg4l5hhftg6v7qm6jm
@@ -1769,8 +1769,8 @@ packages:
     engines: {node: '>=10'}
     dev: false
 
-  /@prisma/client/4.10.1_prisma@4.10.1:
-    resolution: {integrity: sha512-VonXLJZybdt8e5XZH5vnIGCRNnIh6OMX1FS3H/yzMGLT3STj5TJ/OkMcednrvELgk8PK89Vo3aSh51MWNO0axA==}
+  /@prisma/client/4.11.0_prisma@4.11.0:
+    resolution: {integrity: sha512-0INHYkQIqgAjrt7NzhYpeDQi8x3Nvylc2uDngKyFDDj1tTRQ4uV1HnVmd1sQEraeVAN63SOK0dgCKQHlvjL0KA==}
     engines: {node: '>=14.17'}
     requiresBuild: true
     peerDependencies:
@@ -1779,8 +1779,8 @@ packages:
       prisma:
         optional: true
     dependencies:
-      '@prisma/engines-version': 4.10.1-2.aead147aa326ccb985dcfed5b065b4fdabd44b19
-      prisma: 4.10.1
+      '@prisma/engines-version': 4.11.0-57.8fde8fef4033376662cad983758335009d522acb
+      prisma: 4.11.0
     dev: false
 
   /@prisma/debug/4.6.1:
@@ -1814,12 +1814,12 @@ packages:
       - supports-color
     dev: true
 
-  /@prisma/engines-version/4.10.1-2.aead147aa326ccb985dcfed5b065b4fdabd44b19:
-    resolution: {integrity: sha512-tsjTho7laDhf9EJ9EnDxAPEf7yrigSMDhniXeU4YoWc7azHAs4GPxRi2P9LTFonmHkJLMOLjR77J1oIP8Ife1w==}
+  /@prisma/engines-version/4.11.0-57.8fde8fef4033376662cad983758335009d522acb:
+    resolution: {integrity: sha512-3Vd8Qq06d5xD8Ch5WauWcUUrsVPdMC6Ge8ILji8RFfyhUpqon6qSyGM0apvr1O8n8qH8cKkEFqRPsYjuz5r83g==}
     dev: false
 
-  /@prisma/engines/4.10.1:
-    resolution: {integrity: sha512-B3tcTxjx196nuAu1GOTKO9cGPUgTFHYRdkPkTS4m5ptb2cejyBlH9X7GOfSt3xlI7p4zAJDshJP4JJivCg9ouA==}
+  /@prisma/engines/4.11.0:
+    resolution: {integrity: sha512-0AEBi2HXGV02cf6ASsBPhfsVIbVSDC9nbQed4iiY5eHttW9ZtMxHThuKZE1pnESbr8HRdgmFSa/Kn4OSNYuibg==}
     requiresBuild: true
 
   /@prisma/engines/4.6.1:
@@ -3227,8 +3227,8 @@ packages:
     engines: {node: '>=10.0.0'}
     dev: false
 
-  /engine.io/6.4.0:
-    resolution: {integrity: sha512-OgxY1c/RuCSeO/rTr8DIFXx76IzUUft86R7/P7MMbbkuzeqJoTNw2lmeD91IyGz41QYleIIjWeMJGgug043sfQ==}
+  /engine.io/6.4.1:
+    resolution: {integrity: sha512-JFYQurD/nbsA5BSPmbaOSLa3tSVj8L6o4srSwXXY3NqE+gGUNmmPTbhn8tjzcCtSqhFgIeqef81ngny8JM25hw==}
     engines: {node: '>=10.0.0'}
     dependencies:
       '@types/cookie': 0.4.1
@@ -3598,13 +3598,13 @@ packages:
     resolution: {integrity: sha512-ovwFQG2qNy3jcCROiWpr94Hs0le+c7N/3t7m9aVwbFhkxcR/esp2xu25dP8e617HpQdmeDv+gFX4zagdUhDByw==}
     dev: false
 
-  /fastify-socket.io/4.0.0_socket.io@4.6.0:
+  /fastify-socket.io/4.0.0_socket.io@4.6.1:
     resolution: {integrity: sha512-j5mgvHZpQ0Iiz9HyKwGdLOQGjFKH/6KOwx8esxCIBkIjtiQkdC8e4J1xX4JAMISLfTJOY9EHQG/1MmU/9cXaog==}
     peerDependencies:
       socket.io: ^4.4.0
     dependencies:
       fastify-plugin: 3.0.1
-      socket.io: 4.6.0
+      socket.io: 4.6.1
     dev: false
 
   /fastify/4.10.2:
@@ -5569,13 +5569,13 @@ packages:
       - supports-color
     dev: true
 
-  /prisma/4.10.1:
-    resolution: {integrity: sha512-0jDxgg+DruB1kHVNlcspXQB9au62IFfVg9drkhzXudszHNUAQn0lVuu+T8np0uC2z1nKD5S3qPeCyR8u5YFLnA==}
+  /prisma/4.11.0:
+    resolution: {integrity: sha512-4zZmBXssPUEiX+GeL0MUq/Yyie4ltiKmGu7jCJFnYMamNrrulTBc+D+QwAQSJ01tyzeGHlD13kOnqPwRipnlNw==}
     engines: {node: '>=14.17'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@prisma/engines': 4.10.1
+      '@prisma/engines': 4.11.0
 
   /process-nextick-args/2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
@@ -6027,14 +6027,14 @@ packages:
       - supports-color
     dev: false
 
-  /socket.io/4.6.0:
-    resolution: {integrity: sha512-b65bp6INPk/BMMrIgVvX12x3Q+NqlGqSlTuvKQWt0BUJ3Hyy3JangBl7fEoWZTXbOKlCqNPbQ6MbWgok/km28w==}
+  /socket.io/4.6.1:
+    resolution: {integrity: sha512-KMcaAi4l/8+xEjkRICl6ak8ySoxsYG+gG6/XfRCPJPQ/haCRIJBTL4wIl8YCsmtaBovcAXGLOShyVWQ/FG8GZA==}
     engines: {node: '>=10.0.0'}
     dependencies:
       accepts: 1.3.8
       base64id: 2.0.0
       debug: 4.3.4
-      engine.io: 6.4.0
+      engine.io: 6.4.1
       socket.io-adapter: 2.5.2
       socket.io-parser: 4.2.1
     transitivePeerDependencies:

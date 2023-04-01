@@ -8,3 +8,8 @@ export const generateOtp = (length: number = 4) => {
 
   return otp;
 };
+
+// Función auxiliar para convertir grados a radianes
+export const toRadians = (degrees: number) => {
+  return (degrees * Math.PI) / 180;
+};

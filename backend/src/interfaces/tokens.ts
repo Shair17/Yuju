@@ -8,6 +8,7 @@ export type AuthTokenPayload = {
   phoneNumber: string | null;
   dni: string | null;
   avatar: string;
+  isAdmin: boolean;
 };
 
 export type Tokens = {

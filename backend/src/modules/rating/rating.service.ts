@@ -6,7 +6,8 @@ import {GetDriverRatingsQueryType} from './schemas/get-driver-rating.query';
 import {DriverService} from '../driver/driver.service';
 import {CreateUserRatingsBodyType} from './schemas/create-user-rating.body';
 import {CreateDriverRatingsBodyType} from './schemas/create-driver-rating.body';
-// import {TripService} from '../trip/trip.service';
+import {TripService} from '../trip/trip.service';
+import {NotFound} from 'http-errors';
 
 @Service('RatingServiceToken')
 export class RatingService {
@@ -117,11 +118,11 @@ export class RatingService {
     const totalPages = Math.ceil(totalRatings / limit);
 
     return {
-      ratings,
+      data: ratings,
       page,
       limit,
       totalPages,
-      totalRatings,
+      total: totalRatings,
     };
   }
 
@@ -178,11 +179,11 @@ export class RatingService {
     const totalPages = Math.ceil(totalRatings / limit);
 
     return {
-      ratings,
+      data: ratings,
       page,
       limit,
       totalPages,
-      totalRatings,
+      total: totalRatings,
     };
   }
 
@@ -208,24 +209,39 @@ export class RatingService {
       },
     });
 
-    const sumaDeEstrellitas = ratings.reduce((suma, rating) => {
+    const ratingSum = ratings.reduce((suma, rating) => {
       return suma + rating.value;
     }, 0);
 
-    const avarage = sumaDeEstrellitas / ratings.length;
+    const avarage = ratingSum / ratings.length;
 
     return avarage;
   }
 
+  async findTripByIdOrThrow(id: string) {
+    const trip = await this.databaseService.trip.findUnique({where: {id}});
+
+    if (!trip) {
+      throw new NotFound();
+    }
+
+    return trip;
+  }
+
   async createUserRating(id: string, data: CreateUserRatingsBodyType) {
-    const [user, driver] = await Promise.all([
+    const [user, driver, trip] = await Promise.all([
       this.userService.findByIdOrThrow(id),
       this.driverService.findByIdOrThrow(data.driverId),
-      // this.tripService.findByIdOrThrow(data.tripId),
+      this.findTripByIdOrThrow(data.tripId),
     ]);
 
     const createdRating = await this.databaseService.rating.create({
       data: {
+        trip: {
+          connect: {
+            id: trip.id,
+          },
+        },
         comment: data.comment,
         driver: {
           connect: {
@@ -245,14 +261,19 @@ export class RatingService {
   }
 
   async createDriverRating(id: string, data: CreateDriverRatingsBodyType) {
-    const [driver, user] = await Promise.all([
+    const [driver, user, trip] = await Promise.all([
       this.driverService.findByIdOrThrow(id),
       this.userService.findByIdOrThrow(data.userId),
-      // this.tripService.findByIdOrThrow(data.tripId),
+      this.findTripByIdOrThrow(data.tripId),
     ]);
 
     const createdRating = await this.databaseService.rating.create({
       data: {
+        trip: {
+          connect: {
+            id: trip.id,
+          },
+        },
         comment: data.comment,
         driver: {
           connect: {

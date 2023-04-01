@@ -1,16 +1,7 @@
 import React from 'react';
-import {TouchableNativeFeedback, StatusBar} from 'react-native';
-import {
-  Div,
-  Text,
-  Avatar,
-  Image,
-  Button,
-  Icon,
-  Skeleton,
-} from 'react-native-magnus';
+import {StatusBar} from 'react-native';
+import {Div, Text} from 'react-native-magnus';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import * as Animatable from 'react-native-animatable';
 import {
   ProfileStackParams,
   ProfileStackParamsValue,
@@ -20,19 +11,15 @@ import {ProfileSettingTitle} from '@yuju/components/atoms/ProfileSettingTitle';
 import {useAppVersion} from '@yuju/global-hooks/useAppVersion';
 import {Separator} from '@yuju/components/atoms/Separator';
 import {LogoutButton} from '@yuju/components/atoms/LogoutButton';
-import {useRequest} from '@yuju/global-hooks/useRequest';
-import {GetMyProfile} from '@yuju/types/app';
 import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';
+import {ProfileScreenMyProfile} from '@yuju/components/organisms/ProfileScreenMyProfile';
+import {ProfileScreenAdBanner} from '../../components/organisms/ProfileScreenAdBanner';
 
 interface Props
   extends NativeStackScreenProps<ProfileStackParams, 'ProfileScreen'> {}
 
 export const ProfileScreen: React.FC<Props> = ({navigation}) => {
   const appVersion = useAppVersion();
-  const {data: myProfile} = useRequest<GetMyProfile>({
-    method: 'GET',
-    url: '/users/me',
-  });
 
   const navigateTo = (screen: ProfileStackParamsValue, params?: any) => {
     navigation.navigate(screen, params);
@@ -43,117 +30,11 @@ export const ProfileScreen: React.FC<Props> = ({navigation}) => {
       <StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
       <Div bg="body" px="2xl" pt={StatusBar.currentHeight} pb="3xl">
-        <Div rounded="lg" mb="lg" overflow="hidden" flex={1}>
-          <TouchableNativeFeedback
-            background={TouchableNativeFeedback.Ripple('#d4d4d8', true)}
-            onPress={() => navigateTo('EditProfileScreen')}>
-            <Div
-              row
-              rounded="lg"
-              p="xl"
-              borderWidth={1}
-              borderColor="gray200"
-              // shadow="xs"
-              // bg="#fff"
-              alignItems="center"
-              justifyContent="space-between">
-              <Div row>
-                <Avatar
-                  source={{uri: myProfile?.user.profile.avatar}}
-                  rounded="circle"
-                  bg="gray100"
-                />
-                <Div ml="md">
-                  <Div row alignItems="center">
-                    <Text fontSize="xl" fontWeight="bold" numberOfLines={1}>
-                      {myProfile?.user.profile.name}
-                    </Text>
+        <ProfileScreenMyProfile
+          goToEditProfileScreen={() => navigateTo('EditProfileScreen')}
+        />
 
-                    <Animatable.View animation="zoomIn" easing="ease-in-out">
-                      <Image
-                        alignSelf="center"
-                        ml="xs"
-                        w={20}
-                        h={20}
-                        source={require('@yuju/assets/images/verification-badge-96.png')}
-                      />
-                    </Animatable.View>
-
-                    {/* <Tag
-                        alignSelf="center"
-                        ps="sm"
-                        pb="xs"
-                        pl="sm"
-                        pr="sm"
-                        pt="xs"
-                        ml="md"
-                        fontSize={8}
-                        rounded="lg"
-                        bg="primary100"
-                        fontWeight="500"
-                        color="primary900">
-                        Gratis
-                      </Tag> */}
-                  </Div>
-
-                  <Text numberOfLines={1} color="gray500">
-                    {myProfile?.user.profile.email}
-                  </Text>
-                </Div>
-              </Div>
-              <Div>
-                <Icon
-                  fontSize="5xl"
-                  fontFamily="Ionicons"
-                  name="chevron-forward"
-                  color="gray500"
-                />
-              </Div>
-            </Div>
-          </TouchableNativeFeedback>
-        </Div>
-
-        <Div mb="lg">
-          <ProfileSettingTitle title="Anuncio" />
-
-          <Skeleton bg="#eee" mt="md" rounded="lg" h={150} />
-          <Div
-            style={{display: 'none'}}
-            rounded="lg"
-            px="xl"
-            py="lg"
-            borderWidth={1}
-            borderColor="gray200"
-            // shadow="xs"
-            // bg="#fff"
-            alignItems="center"
-            justifyContent="space-between"
-            mt="md"
-            overflow="hidden"
-            flex={1}
-            row>
-            <Div flex={2}>
-              <Image
-                flex={1}
-                source={require('@yuju/assets/images/rocket.png')}
-                resizeMode="contain"
-              />
-            </Div>
-            <Div flex={3}>
-              <Text mb="sm" fontSize="xl" fontWeight="bold" color="gray500">
-                Yuju Pro 😎
-              </Text>
-
-              <Text mb="sm" color="gray500">
-                Go Pro and unlock all the benefits and assets!
-              </Text>
-
-              <Button rounded="lg" block fontWeight="bold">
-                Subir a Premium
-              </Button>
-            </Div>
-          </Div>
-        </Div>
+        <ProfileScreenAdBanner />
 
         <Div mb="lg">
           <ProfileSettingTitle title="Configuraciones y Preferencias" />
@@ -221,8 +102,8 @@ export const ProfileScreen: React.FC<Props> = ({navigation}) => {
           />
           <ProfileSettingItem
             onPress={() => navigateTo('ReportBugScreen')}
-            iconName="bug"
-            title="Reportar un error"
+            iconName="alert-circle"
+            title="Reportar un Problema"
           />
           <ProfileSettingItem
             onPress={() => navigateTo('AskHelpScreen')}

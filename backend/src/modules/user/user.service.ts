@@ -6,6 +6,7 @@ import {trimStrings, isString} from '../../common/utils/string';
 import {CloudinaryService} from '../../providers/cloudinary/cloudinary.service';
 import {
   defaultAvatarUri,
+  MAX_ADDRESSES_PER_USER,
   MAXIMUM_EARNINGS_FOR_REFERRALS,
 } from '../../common/constants/app';
 import {CreateMeBodyType} from './schemas/create-me.body';
@@ -14,6 +15,9 @@ import {CreateUserBodyType} from './schemas/create-user.body';
 import {Availability, Profile} from '@prisma/client';
 import {MAXIMUM_REFERRALS} from '../../common/constants/app';
 import {GetIsBannedResponseType} from './schemas/is-banned.response';
+import {GetUserMyDriversQueryType} from './schemas/get-user-my-drivers.query';
+import {CreateAddressBodyType} from './schemas/create-address.body';
+// import {DniService} from '../../providers/dni/dni.service';
 
 type UpdateTokens = {
   accessToken: string | null;
@@ -27,6 +31,206 @@ export class UserService {
 
   @Inject(CloudinaryService)
   private readonly cloudinaryService: CloudinaryService;
+
+  // @Inject(DniService)
+  // private readonly dniService: DniService;
+
+  async getMyAddresses(id: string) {
+    const user = await this.databaseService.user.findUnique({
+      where: {id},
+      select: {
+        id: true,
+        myAddresses: true,
+      },
+    });
+
+    if (!user) {
+      throw new Unauthorized(`USER_NOT_FOUND`);
+    }
+
+    return {
+      success: true,
+      addresses: user.myAddresses,
+    };
+  }
+
+  async getMyAddress(userId: string, addressId: string) {
+    const user = await this.databaseService.user.findUnique({
+      where: {id: userId},
+      select: {
+        id: true,
+        myAddresses: true,
+      },
+    });
+
+    if (!user) {
+      throw new Unauthorized(`USER_NOT_FOUND`);
+    }
+
+    const foundAddress = user.myAddresses.find(
+      address => address.id === addressId,
+    );
+
+    if (!foundAddress) {
+      throw new NotFound(`ADDRESS_NOT_FOUND`);
+    }
+
+    return {
+      success: true,
+      address: foundAddress,
+    };
+  }
+
+  async createAddress(id: string, data: CreateAddressBodyType) {
+    const user = await this.databaseService.user.findUnique({
+      where: {id},
+      select: {
+        id: true,
+        myAddresses: true,
+      },
+    });
+
+    if (!user) {
+      throw new Unauthorized(`USER_NOT_FOUND`);
+    }
+
+    if (user.myAddresses.length >= MAX_ADDRESSES_PER_USER) {
+      throw new BadRequest('too_many_addresses');
+    }
+
+    const [name] = trimStrings(data.name);
+    const {latitude, longitude, tag, address, city, street, zip} = data;
+
+    const updatedUser = await this.databaseService.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        myAddresses: {
+          create: {
+            name,
+            latitude,
+            longitude,
+            tag,
+            address,
+            city,
+            street,
+            zip,
+          },
+        },
+      },
+      select: {
+        id: true,
+        myAddresses: true,
+      },
+    });
+
+    return {
+      success: true,
+      id: updatedUser.id,
+      addresses: updatedUser.myAddresses,
+      created: true,
+    };
+  }
+
+  async deleteAddress(userId: string, addressId: string) {
+    const user = await this.databaseService.user.findUnique({
+      where: {id: userId},
+      select: {
+        id: true,
+        myAddresses: true,
+      },
+    });
+
+    if (!user) {
+      throw new Unauthorized(`USER_NOT_FOUND`);
+    }
+
+    if (user.myAddresses.length <= 1) {
+      throw new BadRequest(`CANNOT_DELETE_ALL_ADDRESSES`);
+    }
+
+    const foundAddress = user.myAddresses.find(
+      address => address.id === addressId,
+    );
+
+    if (!foundAddress) {
+      throw new Unauthorized(`CANNOT_DELETE_ADDRESS`);
+    }
+
+    const deletedAddress = await this.databaseService.location.delete({
+      where: {
+        id: foundAddress.id,
+      },
+    });
+
+    return {
+      success: true,
+      address: deletedAddress,
+    };
+  }
+
+  async getMyUsersCount(id: string) {
+    return this.databaseService.driver.count({
+      where: {
+        user: {
+          id,
+        },
+      },
+    });
+  }
+
+  async getUserMyDrivers(id: string, data: GetUserMyDriversQueryType) {
+    const user = await this.findByIdOrThrow(id);
+    const {limit, page} = data;
+
+    const myDriversFromDB = await this.databaseService.driver.findMany({
+      where: {
+        user: {
+          id: user.id,
+        },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      select: {
+        id: true,
+        ratings: true,
+        profile: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    const myDrivers = myDriversFromDB.map(
+      ({id, profile, ratings, createdAt, updatedAt}) => {
+        return {
+          id,
+          profile,
+          rating: ratings.reduce((suma, rating) => suma + rating.value, 0),
+          createdAt,
+          updatedAt,
+        };
+      },
+    );
+
+    const totalMyDrivers = await this.getMyUsersCount(id);
+
+    const totalPages = Math.ceil(totalMyDrivers / limit);
+
+    return {
+      data: myDrivers,
+      page,
+      limit,
+      totalPages,
+      total: totalMyDrivers,
+    };
+  }
 
   async createUser(data: CreateUserBodyType) {
     const [facebookAccessToken, facebookId, name] = trimStrings(
@@ -61,6 +265,7 @@ export class UserService {
         availability: true,
         createdAt: true,
         updatedAt: true,
+        isAdmin: true,
       },
     });
 
@@ -327,8 +532,14 @@ export class UserService {
       throw new Unauthorized(`USER_NOT_FOUND`);
     }
 
-    // Check is avatar is valid string, so then upload to cloudinary
+    // const dniApiResponse = await this.dniService.getData(dni);
+
+    // if (!dniApiResponse.data.success) {
+    // throw new BadRequest(`INVALID_DNI`);
+    // }
+
     if (isString(avatar)) {
+      // Check is avatar is valid string, so then upload to cloudinary
       let filename = `${user.profile.name
         .toLocaleLowerCase()
         .replace(' ', '')}-${user.id}`;
@@ -473,6 +684,7 @@ export class UserService {
         availability: true,
         createdAt: true,
         updatedAt: true,
+        isAdmin: true,
       },
     });
   }
@@ -500,6 +712,7 @@ export class UserService {
         availability: true,
         createdAt: true,
         updatedAt: true,
+        isAdmin: true,
       },
     });
   }

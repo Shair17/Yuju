@@ -52,7 +52,7 @@ export const AskHelpScreen: React.FC<Props> = () => {
     <ScrollScreen>
       <StatusBar backgroundColor="#fff" barStyle="dark-content" />
       <Div bg="body" px="2xl" pt={StatusBar.currentHeight} pb="3xl">
-        <Div mt="md">
+        <Div>
           <Text fontWeight="bold" fontSize="2xl" color="text" textAlign="left">
             {greeting}{' '}
             <Text fontWeight="bold" fontSize="2xl" color="primary500">

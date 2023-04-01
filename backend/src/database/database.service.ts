@@ -15,7 +15,7 @@ export class DatabaseService
   async onModuleInit() {
     await this.$connect();
     this.loggerService.info(
-      `Prisma Service has established the connection to the database`,
+      `Prisma Service has established the connection to the database.`,
     );
   }
 
@@ -23,7 +23,7 @@ export class DatabaseService
   async onModuleDestroy() {
     await this.$disconnect();
     this.loggerService.info(
-      `Prisma Service has been disconnected from the database`,
+      `Prisma Service has been disconnected from the database.`,
     );
   }
 }

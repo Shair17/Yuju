@@ -5,6 +5,8 @@ import {
   ProfileStackParams,
   ProfileStackParamsValue,
 } from '../bottom-tabs/ProfileStackScreen';
+import {FlashList} from '@shopify/flash-list';
+import {usePagination} from '@yuju/global-hooks/usePagination';
 
 interface Props
   extends NativeStackScreenProps<
@@ -13,6 +15,14 @@ interface Props
   > {}
 
 export const AddressesBookmarkScreen: React.FC<Props> = ({navigation}) => {
+  const {
+    myData: myAddresses,
+    isLoading,
+    handleAddMoreItems,
+  } = usePagination({
+    url: '',
+  });
+
   return (
     <Div bg="body">
       <Text>AddressesBookmarkScreen</Text>

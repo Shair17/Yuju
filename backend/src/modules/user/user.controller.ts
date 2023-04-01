@@ -19,11 +19,94 @@ import {
   GetIsBannedResponse,
   GetIsBannedResponseType,
 } from './schemas/is-banned.response';
+import {
+  GetUserMyDriversQuery,
+  GetUserMyDriversQueryType,
+} from './schemas/get-user-my-drivers.query';
+import {
+  GetUserAddressParams,
+  GetUserAddressParamsType,
+} from './schemas/get-user-address.params';
+import {
+  CreateAddressBody,
+  CreateAddressBodyType,
+} from './schemas/create-address.body';
+import {
+  DeleteAddressParams,
+  DeleteAddressParamsType,
+} from './schemas/delete-address.params';
 
 @Controller('/v1/users')
 export class UserController {
   @Inject(UserService)
   private readonly userService: UserService;
+
+  @GET('/addresses', {
+    onRequest: [hasBearerToken, userIsAuthenticated],
+  })
+  async getMyAddresses(request: Request, reply: Reply) {
+    return this.userService.getMyAddresses(request.user?.id!);
+  }
+
+  @GET('/addresses/:id', {
+    onRequest: [hasBearerToken, userIsAuthenticated],
+    schema: {
+      params: GetUserAddressParams,
+    },
+  })
+  async getMyAddress(
+    request: Request<{
+      Params: GetUserAddressParamsType;
+    }>,
+    reply: Reply,
+  ) {
+    return this.userService.getMyAddress(request.user?.id!, request.params.id);
+  }
+
+  @POST('/addresses', {
+    onRequest: [hasBearerToken, userIsAuthenticated],
+    schema: {
+      body: CreateAddressBody,
+    },
+  })
+  async createAddress(
+    request: Request<{
+      Body: CreateAddressBodyType;
+    }>,
+    reply: Reply,
+  ) {
+    return this.userService.createAddress(request.user?.id!, request.body);
+  }
+
+  @DELETE('/addresses/:id', {
+    onRequest: [hasBearerToken, userIsAuthenticated],
+    schema: {
+      params: DeleteAddressParams,
+    },
+  })
+  async deleteAddress(
+    request: Request<{
+      Params: DeleteAddressParamsType;
+    }>,
+    reply: Reply,
+  ) {
+    return this.userService.deleteAddress(request.user?.id!, request.params.id);
+  }
+
+  @GET('/my-drivers', {
+    onRequest: [hasBearerToken, userIsAuthenticated],
+    schema: {
+      querystring: GetUserMyDriversQuery,
+    },
+  })
+  async getUserMyDrivers(
+    request: Request<{
+      Querystring: GetUserMyDriversQueryType;
+    }>,
+    reply: Reply,
+  ) {
+    return this.userService.getUserMyDrivers(request.user?.id!, request.query);
+  }
 
   @GET('/')
   async getUsers() {

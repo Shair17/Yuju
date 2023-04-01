@@ -1,11 +1,16 @@
-import {Service} from 'fastify-decorators';
+import {Inject, Service} from 'fastify-decorators';
 import {DatabaseService} from '../../database/database.service';
 import {NotFound, BadRequest, Unauthorized} from 'http-errors';
 import {MAX_RATINGS_COUNT_FOR_MEET_YOUR_DRIVER} from '../../common/constants/app';
+import {UserService} from '../user/user.service';
 
 @Service('DriverServiceToken')
 export class DriverService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  @Inject(DatabaseService)
+  private readonly databaseService: DatabaseService;
+
+  @Inject(UserService)
+  private readonly userService: UserService;
 
   async findById(id: string) {
     return this.databaseService.driver.findUnique({
@@ -18,6 +23,7 @@ export class DriverService {
         facebookId: true,
         facebookAccessToken: true,
         availability: true,
+        isAdmin: true,
         createdAt: true,
         updatedAt: true,
       },

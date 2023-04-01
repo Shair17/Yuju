@@ -4,6 +4,8 @@ import {DriverService} from '../driver/driver.service';
 import {UserService} from '../user/user.service';
 import {GetMeetYourDriverParamsType} from './schemas/meet-your-driver.params.schema';
 import {RatingService} from '../rating/rating.service';
+import {NotFound} from 'http-errors';
+import {GetUserTripsQueryType} from './schemas/get-user-trips.query';
 
 @Service('TripServiceToken')
 export class TripService {
@@ -56,11 +58,138 @@ export class TripService {
     };
   }
 
+  async getUserTrips(id: string, data: GetUserTripsQueryType) {
+    const user = await this.userService.findByIdOrThrow(id);
+
+    const {limit, page} = data;
+
+    const tripsFromDB = await this.databaseService.trip.findMany({
+      where: {
+        user: {
+          id: user.id,
+        },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      select: {
+        id: true,
+        driver: {
+          select: {
+            id: true,
+            profile: {
+              select: {
+                name: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            profile: {
+              select: {
+                name: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        from: {
+          select: {
+            id: true,
+            address: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+        to: {
+          select: {
+            id: true,
+            address: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+        passengersQuantity: true,
+        price: true,
+        status: true,
+        ratings: true,
+        startTime: true,
+        endTime: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    const trips = tripsFromDB.map(
+      ({
+        id,
+        price,
+        passengersQuantity,
+        user,
+        driver,
+        status,
+        from,
+        to,
+        ratings,
+        startTime,
+        endTime,
+        createdAt,
+        updatedAt,
+      }) => {
+        return {
+          id,
+          price,
+          passengersQuantity,
+          user,
+          driver,
+          rating: ratings.reduce((suma, rating) => suma + rating.value, 0),
+          from,
+          to,
+          status,
+          startTime,
+          endTime,
+          createdAt,
+          updatedAt,
+        };
+      },
+    );
+
+    const totalTrips = await this.getMyUsersCount(id);
+
+    const totalPages = Math.ceil(totalTrips / limit);
+
+    return {
+      data: trips,
+      page,
+      limit,
+      totalPages,
+      total: totalTrips,
+    };
+  }
+
+  async getMyUsersCount(id: string) {
+    return this.databaseService.trip.count({
+      where: {
+        user: {
+          id,
+        },
+      },
+    });
+  }
+
   async findById(id: string) {
-    return null;
+    return this.databaseService.trip.findUnique({where: {id}});
   }
 
   async findByIdOrThrow(id: string) {
-    return null;
+    const trip = await this.findById(id);
+
+    if (!trip) {
+      throw new NotFound();
+    }
+
+    return trip;
   }
 }

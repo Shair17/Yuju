@@ -13,6 +13,7 @@ import {
   Button,
   Dropdown,
   Input,
+  Skeleton,
 } from 'react-native-magnus';
 import DatePicker from 'react-native-date-picker';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -31,6 +32,7 @@ import {getAgeFromDate} from '@yuju/common/utils/age';
 import useAxios from 'axios-hooks';
 import {PhotoPreviewOverlay} from '@yuju/components/atoms/PhotoPreviewOverlay';
 import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';
+import {EventArg} from '@react-navigation/native';
 
 interface Props
   extends NativeStackScreenProps<ProfileStackParams, 'EditProfileScreen'> {}
@@ -93,6 +95,7 @@ export const EditProfileScreen: React.FC<Props> = ({navigation}) => {
       myProfile.user.profile.phoneNumber !== watch('phone') ||
       myProfile.user.profile.avatar !== avatarImageForEditProfile.uri ||
       new Date(myProfile.user.profile.birthDate!).getTime() !== date.getTime());
+  const [canGoBack, setCanGoBack] = useState(!hasUnsavedChanges);
 
   const handleSave = handleSubmit(data => {
     const age = getAgeFromDate(date);
@@ -103,6 +106,8 @@ export const EditProfileScreen: React.FC<Props> = ({navigation}) => {
     }
 
     setDateError(false);
+
+    setCanGoBack(true);
 
     executeUpdateProfile({
       data: {
@@ -125,32 +130,44 @@ export const EditProfileScreen: React.FC<Props> = ({navigation}) => {
       .catch(() => navigation.goBack());
   });
 
-  useEffect(
-    () =>
-      navigation.addListener('beforeRemove', e => {
-        if (!hasUnsavedChanges) {
-          return;
+  useEffect(() => setCanGoBack(!hasUnsavedChanges), [hasUnsavedChanges]);
+
+  useEffect(() => {
+    const listener = (
+      e: EventArg<
+        'beforeRemove',
+        true,
+        {
+          action: Readonly<{
+            type: string;
+          }>;
         }
+      >,
+    ) => {
+      if (!hasUnsavedChanges || canGoBack) {
+        return;
+      }
 
-        e.preventDefault();
+      e.preventDefault();
 
-        Alert.alert(
-          'Descartar cambios?',
-          'Tienes cambios sin guardar, seguro que quieres irte sin guardarlos?',
-          [
-            {text: 'No', style: 'cancel', onPress: () => {}},
-            {
-              text: 'Sí',
-              style: 'destructive',
-              // If the user confirmed, then we dispatch the action we blocked earlier
-              // This will continue the action that had triggered the removal of the screen
-              onPress: () => navigation.dispatch(e.data.action),
-            },
-          ],
-        );
-      }),
-    [navigation, hasUnsavedChanges],
-  );
+      Alert.alert(
+        'Descartar cambios?',
+        'Tienes cambios sin guardar, seguro que quieres irte sin guardarlos?',
+        [
+          {text: 'No', style: 'cancel'},
+          {
+            text: 'Sí',
+            style: 'destructive',
+            onPress: () => navigation.dispatch(e.data.action),
+          },
+        ],
+      );
+    };
+
+    navigation.addListener('beforeRemove', listener);
+
+    return () => navigation.removeListener('beforeRemove', listener);
+  }, [navigation, hasUnsavedChanges, canGoBack]);
 
   return (
     <Fragment>
@@ -199,13 +216,17 @@ export const EditProfileScreen: React.FC<Props> = ({navigation}) => {
                 rounded="circle"
                 alignItems="center"
                 justifyContent="center">
-                <Avatar
-                  size={145}
-                  alignSelf="center"
-                  rounded="circle"
-                  bg="gray100"
-                  source={avatarImageForEditProfile}
-                />
+                {!myProfile ? (
+                  <Skeleton.Circle w={145} h={145} bg="gray100" />
+                ) : (
+                  <Avatar
+                    size={145}
+                    alignSelf="center"
+                    rounded="circle"
+                    bg="gray100"
+                    source={avatarImageForEditProfile}
+                  />
+                )}
               </Div>
             </TouchableOpacity>
           </Div>

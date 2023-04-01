@@ -3,20 +3,60 @@ import {LoggerService} from '../../common/logger/logger.service';
 import {AuthTokenPayload} from '../../interfaces/tokens';
 import {ILocation} from './realtime.service';
 import {OnModuleInit, OnModuleDestroy} from '../../interfaces/module';
+import {getDistance} from '../../common/utils/location';
 
-interface Location {
+interface Driver extends AuthTokenPayload {
   location: ILocation;
 }
 
-interface Driver extends AuthTokenPayload, Location {}
+interface User extends AuthTokenPayload {
+  location: ILocation;
+}
 
-interface User extends AuthTokenPayload, Location {}
+interface InRide {
+  // this should be trip database id
+  id: string;
+  user: User;
+  driver: Driver;
+  currentLocation: ILocation;
+  // use nanoid
+  trackingCode: string;
+  from: {
+    address?: string;
+    location: ILocation;
+  };
+  to: {
+    address?: string;
+    location: ILocation;
+  };
+  passengersQuantity: number;
+  ridePrice: number;
+}
+
+interface InRidePending {
+  // this should be trip database id
+  id: string;
+  // Solo hay User, el driver aún estaría pendiente...
+  user: User;
+  // y una vez se encuentre un driver pasaría a la otra cola de inRideQueue, y se removería de inRidePendingQueue
+  from: {
+    address?: string;
+    location: ILocation;
+  };
+  to: {
+    address?: string;
+    location: ILocation;
+  };
+  passengersQuantity: number;
+  ridePrice: number;
+}
 
 @Service('QueueServiceToken')
 export class QueueService implements OnModuleInit, OnModuleDestroy {
   private driversQueue = new Map<string, Driver>();
-  private inRideQueue = new Map<string, Driver>();
   private usersQueue = new Map<string, User>();
+  private inRideQueue = new Map<string, InRide>();
+  private inRidePendingQueue = new Map<string, InRidePending>();
 
   private timer: NodeJS.Timer;
 
@@ -26,12 +66,50 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   @Initializer()
   onModuleInit() {
     this.timer = setInterval(() => {
-      for (const [id, {name, location}] of this.usersQueue) {
+      for (const [id, {name, location}] of this.driversQueue) {
         this.loggerService.info(
-          `[${id}]: ${name} -> [latitude: ${location?.latitude}] - [longitude: ${location?.longitude}]`,
+          `@DRIVERS_QUEUE [${id}]: ${name} -> [latitude: ${location?.latitude}] - [longitude: ${location?.longitude}]`,
         );
       }
-    }, 1e3);
+
+      for (const [id, {name, location}] of this.usersQueue) {
+        this.loggerService.info(
+          `@USERS_QUEUE [${id}]: ${name} -> [latitude: ${location?.latitude}] - [longitude: ${location?.longitude}]`,
+        );
+      }
+
+      for (const [
+        id,
+        {
+          user,
+          driver,
+          from,
+          to,
+          trackingCode,
+          passengersQuantity,
+          ridePrice,
+          currentLocation,
+        },
+      ] of this.inRideQueue) {
+        this.loggerService.info(
+          `@IN_RIDE_QUEUE [${id}]: Passenger: ${user.name} is with Driver: ${
+            driver.name
+          } (${passengersQuantity} passenger(s)) and price (S/${ridePrice}) from ${
+            !!from.address ? `(${from.address})` : ''
+          } [latitude: ${from.location.latitude}] - [longitude: ${
+            from.location.longitude
+          }] to ${!!to.address ? `(${to.address})` : ''} [latitude: ${
+            to.location.latitude
+          }] - [longitude: ${
+            to.location.longitude
+          }] with tracking code ${trackingCode} and their current location is [latitude: ${
+            currentLocation.latitude
+          }] - [longitude: ${currentLocation.longitude}]`,
+        );
+      }
+
+      // console.log(this.inRidePendingQueue);
+    }, 5000);
   }
 
   @Destructor()
@@ -146,15 +224,14 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** In Ride */
-  /** Modificar Driver a otro tipo de dato */
-  enqueueToInRide(driver: Driver): void {
-    this.inRideQueue.set(driver.id, driver);
+  enqueueToInRide(inRide: InRide): void {
+    this.inRideQueue.set(inRide.id, inRide);
   }
 
-  editInRideQueue(driver: Driver): void {
-    if (!this.existsInRideQueue(driver.id)) return;
+  editInRideQueue(inRide: InRide): void {
+    if (!this.existsInRideQueue(inRide.id)) return;
 
-    this.enqueueToInRide(driver);
+    this.enqueueToInRide(inRide);
   }
 
   getFromInRideQueue(id: string) {
@@ -168,13 +245,13 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
     if (isDeleted && inRide) {
       this.loggerService.info(
-        `[${inRide.id}] ${
-          inRide.name
+        `[${inRide.id}] Driver: ${inRide.driver.name}, Passenger: ${
+          inRide.user.name
         } disconnected from [InRideQueue] at ${new Date().toLocaleString()}`,
       );
     } else {
       this.loggerService.info(
-        `[${id}] Driver disconnected from [InRideQueue] at ${new Date().toLocaleString()}`,
+        `[${id}] Driver and Passenger are disconnected from [InRideQueue] at ${new Date().toLocaleString()}`,
       );
     }
   }
@@ -191,11 +268,453 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     return this.inRideQueueSize() === 0;
   }
 
+  userExistsInRide(userId: string): boolean {
+    let isInRide = false;
+
+    this.inRideQueue.forEach((inRide, id) => {
+      if (inRide.user.id === userId) {
+        isInRide = true;
+      }
+    });
+
+    return isInRide;
+  }
+
+  userIsInRide(userId: string): InRide | null {
+    let inRide: InRide | null = null;
+
+    this.inRideQueue.forEach(inRide => {
+      if (inRide.user.id === userId) {
+        inRide = inRide;
+      }
+    });
+
+    return inRide;
+  }
+
+  driverExistsInRide(driverId: string): boolean {
+    let isInRide = false;
+
+    this.inRideQueue.forEach(inRide => {
+      if (inRide.driver.id === driverId) {
+        isInRide = true;
+      }
+    });
+
+    return isInRide;
+  }
+
+  driverIsInRide(driverId: string): InRide | null {
+    let inRide: InRide | null = null;
+
+    this.inRideQueue.forEach(inRide => {
+      if (inRide.driver.id === driverId) {
+        inRide = inRide;
+      }
+    });
+
+    return inRide;
+  }
+
+  /** In Ride Pending */
+  enqueueToInRidePending(inRidePending: InRidePending): void {
+    this.inRidePendingQueue.set(inRidePending.id, inRidePending);
+  }
+
+  editInRidePendingQueue(inRidePending: InRidePending): void {
+    if (!this.existsInRidePendingQueue(inRidePending.id)) return;
+
+    this.enqueueToInRidePending(inRidePending);
+  }
+
+  getFromInRidePendingQueue(id: string) {
+    return this.inRidePendingQueue.get(id);
+  }
+
+  deleteFromInRidePendingQueue(id: string) {
+    const inRidePending = this.getFromInRidePendingQueue(id);
+
+    const isDeleted = this.inRidePendingQueue.delete(id);
+
+    if (isDeleted && inRidePending) {
+      this.loggerService.info(
+        `[${inRidePending.id}] Passenger: ${
+          inRidePending.user.name
+        } disconnected from [InRideQueue] at ${new Date().toLocaleString()}`,
+      );
+    } else {
+      this.loggerService.info(
+        `[${id}] Driver and Passenger are disconnected from [InRideQueue] at ${new Date().toLocaleString()}`,
+      );
+    }
+  }
+
+  existsInRidePendingQueue(id: string): boolean {
+    return this.inRidePendingQueue.has(id);
+  }
+
+  inRidePendingQueueSize(): number {
+    return this.inRidePendingQueue.size;
+  }
+
+  inRidePendingQueueIsEmpty(): boolean {
+    return this.inRidePendingQueueSize() === 0;
+  }
+
+  userExistsInRidePending(userId: string): boolean {
+    let isInRidePending = false;
+
+    this.inRidePendingQueue.forEach((inRidePending, id) => {
+      if (inRidePending.user.id === userId) {
+        isInRidePending = true;
+      }
+    });
+
+    return isInRidePending;
+  }
+
+  userIsInRidePending(userId: string): InRidePending | null {
+    let inRidePending: InRidePending | null = null;
+
+    this.inRidePendingQueue.forEach(inRidePendingItem => {
+      if (inRidePendingItem.user.id === userId) {
+        inRidePending = inRidePendingItem;
+      }
+    });
+
+    return inRidePending;
+  }
+
   sizes() {
     return {
       users: this.usersQueueSize(),
       drivers: this.driversQueueSize(),
       inRide: this.inRideQueueSize(),
     };
+  }
+
+  usersToArray(): User[] {
+    return Array.from(this.usersQueue.values());
+  }
+
+  driversToArray(): Driver[] {
+    return [
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '1',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.232198789888603,
+          longitude: -79.42413003835996,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '12',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.232039422834763,
+          longitude: -79.42268342626699,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '13',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.23138539247555,
+          longitude: -79.41827878881867,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '14',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.2333249280210845,
+          longitude: -79.42499088794959,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '15',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.230136444977575,
+          longitude: -79.42706493454632,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '16',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.229961660358475,
+          longitude: -79.42320590380129,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '17',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.231878649252484,
+          longitude: -79.42783219394416,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '18',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.230579852633565,
+          longitude: -79.42192346112886,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '19',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.228634667045279,
+          longitude: -79.4233499953256,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '112',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.230654437151617,
+          longitude: -79.41690563389751,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '124',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.230940850293583,
+          longitude: -79.419255151521,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '151',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.229891744664079,
+          longitude: -79.41380373629244,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '1123',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.230970402535964,
+          longitude: -79.41098121397606,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '154',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.228206725603833,
+          longitude: -79.42765110912202,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '165',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.232198789888603,
+          longitude: -79.42413003835996,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '187',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.227534407638503,
+          longitude: -79.42931930174386,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '1156',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.227467914584496,
+          longitude: -79.42448601158114,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '134543',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.228162396952148,
+          longitude: -79.43150135727964,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '1fsf',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.2226361737839175,
+          longitude: -79.4304045526686,
+        },
+      },
+      {
+        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+        dni: '12345678',
+        email: 'hello@rix.dev',
+        facebookId: '123456',
+        id: '1fsaxsa',
+        isAdmin: false,
+        name: 'Roberto',
+        phoneNumber: '987654321',
+        location: {
+          latitude: -7.225015166351945,
+          longitude: -79.43165569710223,
+        },
+      },
+    ];
+    // return Array.from(this.driversQueue.values());
+  }
+
+  _driversToArray() {
+    return ['hola', 'mundo', 'soy', 'shair'];
+  }
+
+  getClosestDriver(passengerLocation: ILocation): Driver | null {
+    if (passengerLocation.latitude === 0 || passengerLocation.longitude === 0) {
+      return null;
+    }
+
+    const drivers = this.driversToArray();
+
+    const sortedDrivers = drivers.sort((prevDriver, nextDriver) => {
+      const distanceToA = getDistance(passengerLocation, prevDriver.location);
+      const distanceToB = getDistance(passengerLocation, nextDriver.location);
+
+      return distanceToA - distanceToB;
+    });
+
+    if (sortedDrivers.length > 0) {
+      // Select the first closest driver
+      const foundDriver = sortedDrivers[0];
+
+      if (
+        foundDriver.location.latitude === 0 ||
+        foundDriver.location.longitude === 0
+      ) {
+        return null;
+      }
+
+      return foundDriver;
+    }
+
+    return null;
   }
 }

@@ -7,6 +7,7 @@ import {TripModule} from './modules/trip/trip.module';
 import {UserModule} from './modules/user/user.module';
 import {VehicleModule} from './modules/vehicle/vehicle.module';
 import {BugReportModule} from './modules/bug-report/bug-report.module';
+import {NotificationModule} from './modules/notification/notification.module';
 
 export const AppModule: Constructor<unknown>[] = [
   AppController,
@@ -18,4 +19,5 @@ export const AppModule: Constructor<unknown>[] = [
   ...UserModule,
   ...VehicleModule,
   ...BugReportModule,
+  ...NotificationModule,
 ];

@@ -23,6 +23,8 @@ export const defaultAvatarUri =
 
 export const MAX_REFERRAL_CODE_LENGTH = 6;
 
+export const MAX_TRACKING_RIDE_CODE_LENGTH = 4;
+
 export const MAXIMUM_EARNINGS_FOR_REFERRALS = 5;
 
 export const MAXIMUM_REFERRALS = 10;
@@ -31,5 +33,7 @@ export const MAX_RATINGS_COUNT_FOR_MEET_YOUR_DRIVER = 5;
 
 export const DEFAULT_PAGE_PAGINATION = 1;
 export const MAX_ITEMS_PER_PAGE_PAGINATION = 10;
+
+export const MAX_ADDRESSES_PER_USER = 10;
 
 export const PROFIT_PERCENTAGE_PER_TRIP = 10;

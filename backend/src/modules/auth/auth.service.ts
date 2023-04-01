@@ -70,6 +70,7 @@ export class AuthService {
         email: createdUser.profile.email,
         phoneNumber: createdUser.profile.phoneNumber,
         avatar: createdUser.profile.avatar,
+        isAdmin: createdUser.isAdmin,
       };
 
       const {accessToken, refreshToken} = this.tokenService.generateTokens(
@@ -110,6 +111,7 @@ export class AuthService {
       email: user.profile.email,
       phoneNumber: user.profile.phoneNumber,
       avatar: user.profile.avatar,
+      isAdmin: user.isAdmin,
     };
 
     const {accessToken, refreshToken} = this.tokenService.generateTokens(
@@ -150,6 +152,7 @@ export class AuthService {
       email: user.profile.email,
       phoneNumber: user.profile.phoneNumber,
       avatar: user.profile.avatar,
+      isAdmin: user.isAdmin,
     };
 
     const accessToken = this.tokenService.generateAccessToken('user', payload);

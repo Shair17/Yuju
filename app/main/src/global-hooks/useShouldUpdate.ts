@@ -25,11 +25,11 @@ export const useShouldUpdate = (): ReturnAppShouldUpdate => {
     return 'loading';
   }
 
-  if (isError) {
+  if (isError || !data) {
     return 'error';
   }
 
-  if (+data!.app_version.split('.')[0] > +appVersion.split('.')[0]) {
+  if (+data.app_version.split('.')[0] > +appVersion.split('.')[0]) {
     return 'needs-update';
   }
 

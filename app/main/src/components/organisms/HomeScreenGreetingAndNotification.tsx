@@ -1,6 +1,6 @@
 import React, {useRef} from 'react';
 import {TouchableOpacity} from 'react-native';
-import {Avatar, Badge, Div, Icon, Text} from 'react-native-magnus';
+import {Avatar, Badge, Div, Icon, Text, Skeleton} from 'react-native-magnus';
 import * as Animatable from 'react-native-animatable';
 import {useGreeting} from '@yuju/global-hooks/useGreeting';
 import {useRequest} from '@yuju/global-hooks/useRequest';
@@ -26,18 +26,26 @@ export const HomeScreenGreetingAndNotification: React.FC<Props> = ({
     <Div row justifyContent="space-between">
       <Div>
         <TouchableOpacity activeOpacity={0.8} onPress={goToEditProfileScreen}>
-          <Avatar
-            source={{uri: myProfile?.user.profile.avatar}}
-            rounded="circle"
-            bg="gray100"
-          />
+          {!myProfile ? (
+            <Skeleton.Circle w={48} h={48} bg="gray100" />
+          ) : (
+            <Avatar
+              source={{uri: myProfile?.user.profile.avatar}}
+              rounded="circle"
+              bg="gray100"
+            />
+          )}
         </TouchableOpacity>
         <Text fontSize="6xl" fontWeight="300">
           {greeting},
         </Text>
-        <Text fontSize="4xl" fontWeight="700" numberOfLines={1}>
-          {myProfile?.user.profile.name}
-        </Text>
+        {!myProfile ? (
+          <Skeleton.Circle w="100%" mt="sm" h={26} bg="gray100" />
+        ) : (
+          <Text fontSize="4xl" fontWeight="700" numberOfLines={1}>
+            {myProfile?.user.profile.name}
+          </Text>
+        )}
       </Div>
 
       <Div justifyContent="flex-start">

@@ -5,17 +5,38 @@ import io, {Socket} from 'socket.io-client';
 import {isValidToken} from '@yuju/common/utils/token';
 import {isTokenExpired} from '@yuju/services/refresh-token';
 
+export interface Driver {
+  id: string;
+  facebookId: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  dni: string;
+  avatar: string;
+  isAdmin: boolean;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
 export type SocketStatus = 'loading' | 'online' | 'offline';
 
 type SocketStoreValues = {
   socket: Socket | null;
   status: SocketStatus;
+  availableDrivers: Driver[];
+  isInRide: boolean;
+  isInPendingRide: boolean;
 };
 
 const getDefaultValues = (): SocketStoreValues => {
   return {
     socket: null,
     status: 'loading',
+    availableDrivers: [],
+    isInRide: false,
+    isInPendingRide: false,
   };
 };
 
@@ -59,7 +80,6 @@ export const useSocketStore = create(
         socket: io(SOCKET_URL, {
           transports: ['websocket'],
           autoConnect: true,
-          forceNew: true,
           auth: {
             token,
           },
@@ -67,5 +87,9 @@ export const useSocketStore = create(
       });
     },
     setStatus: (status: SocketStatus) => set({status}),
+    setAvailableDrivers: (availableDrivers: Driver[]) =>
+      set({availableDrivers}),
+    setIsInRide: (isInRide: boolean) => set({isInRide}),
+    setIsInPendingRide: (isInPendingRide: boolean) => set({isInPendingRide}),
   })),
 );

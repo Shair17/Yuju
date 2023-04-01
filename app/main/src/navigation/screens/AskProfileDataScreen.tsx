@@ -25,7 +25,7 @@ export const AskProfileDataScreen: React.FC<Props> = ({
     params: {avatar, referralCode},
   },
 }) => {
-  const {control, handleSubmit, formState} = useEditProfile();
+  const {control, handleSubmit, formState, setError} = useEditProfile();
   const {
     isLoading,
     isValidating,
@@ -76,7 +76,14 @@ export const AskProfileDataScreen: React.FC<Props> = ({
         mutateIsNewUser();
       })
       .catch(error => {
-        console.log(error);
+        // Error: INVALID_DNI
+        const isInvalidDNI = error?.response?.data.message === 'INVALID_DNI';
+
+        if (isInvalidDNI) {
+          setError('dni', {
+            message: 'DNI inválido',
+          });
+        }
       });
   });
 
@@ -142,7 +149,7 @@ export const AskProfileDataScreen: React.FC<Props> = ({
                 <Input
                   mt="md"
                   placeholder="Documento Nacional de Identidad"
-                  keyboardType="default"
+                  keyboardType="numeric"
                   fontSize="lg"
                   maxLength={8}
                   prefix={<Icon fontFamily="Ionicons" name="card" mr="xs" />}
@@ -185,7 +192,7 @@ export const AskProfileDataScreen: React.FC<Props> = ({
                   value={value}
                   borderColor={formState.errors.phone ? 'red' : 'gray400'}
                   placeholder="Número de Celular"
-                  keyboardType="default"
+                  keyboardType="numeric"
                   fontSize="lg"
                   prefix={
                     <Icon fontFamily="Ionicons" name="phone-portrait" mr="xs" />
