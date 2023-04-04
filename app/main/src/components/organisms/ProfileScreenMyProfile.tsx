@@ -45,7 +45,7 @@ export const ProfileScreenMyProfile: React.FC<Props> = ({
             <Div ml="md">
               <Div row alignItems="center">
                 {!myProfile ? (
-                  <Skeleton rounded="lg" bg="gray100" w={140} h={20}></Skeleton>
+                  <Skeleton rounded="lg" bg="gray100" w={140} h={20} />
                 ) : (
                   <Text fontSize="xl" fontWeight="bold" numberOfLines={1}>
                     {myProfile?.user.profile.name}
@@ -66,12 +66,7 @@ export const ProfileScreenMyProfile: React.FC<Props> = ({
               </Div>
 
               {!myProfile ? (
-                <Skeleton
-                  rounded="lg"
-                  mt="sm"
-                  bg="gray100"
-                  w={100}
-                  h={15}></Skeleton>
+                <Skeleton rounded="lg" mt="sm" bg="gray100" w={100} h={15} />
               ) : (
                 <Text numberOfLines={1} color="gray500">
                   {myProfile?.user.profile.email}

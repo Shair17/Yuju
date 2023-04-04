@@ -1,3 +1,4 @@
+import {globalStyles} from '@yuju/styles/globals';
 import React from 'react';
 import {TouchableWithoutFeedback} from 'react-native';
 import {Image, Overlay} from 'react-native-magnus';
@@ -28,7 +29,9 @@ export const PhotoPreviewOverlay: React.FC<Props> = ({
       m={0}
       w="100%"
       h="100%">
-      <TouchableWithoutFeedback onPress={closePhotoOverlay} style={{flex: 1}}>
+      <TouchableWithoutFeedback
+        onPress={closePhotoOverlay}
+        style={globalStyles.container}>
         <Image flex={1} resizeMode="contain" source={avatar} />
       </TouchableWithoutFeedback>
     </Overlay>

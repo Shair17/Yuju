@@ -20,9 +20,4 @@ export class AppController {
   getAppV1() {
     return this.appService.getApp();
   }
-
-  @GET('/details')
-  getDetails() {
-    return this.appService.getDetails();
-  }
 }

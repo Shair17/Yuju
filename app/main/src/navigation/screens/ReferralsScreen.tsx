@@ -36,7 +36,9 @@ export const ReferralsScreen: React.FC<Props> = ({navigation}) => {
     navigation.navigate('MyReferralsScreen');
   };
 
-  if (isLoading) return <LoadingTemplate />;
+  if (isLoading) {
+    return <LoadingTemplate />;
+  }
 
   return (
     <ScrollScreen>

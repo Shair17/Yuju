@@ -1,5 +1,5 @@
 import React from 'react';
-import {Div, Text, Skeleton, Image, Button} from 'react-native-magnus';
+import {Div} from 'react-native-magnus';
 import {ProfileSettingTitle} from '@yuju/components/atoms/ProfileSettingTitle';
 import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
 

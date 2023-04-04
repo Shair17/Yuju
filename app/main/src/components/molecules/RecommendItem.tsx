@@ -1,3 +1,4 @@
+import {globalStyles} from '@yuju/styles/globals';
 import React from 'react';
 import {ImageSourcePropType, TouchableOpacity} from 'react-native';
 import {Div, DivProps, Image, Text} from 'react-native-magnus';
@@ -26,7 +27,10 @@ export const RecommendItem: React.FC<Props> = ({
       alignItems="center"
       justifyContent="center"
       {...rest}>
-      <TouchableOpacity style={{flex: 1}} onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={globalStyles.container}
+        onPress={onPress}
+        activeOpacity={0.7}>
         <Div flex={1} alignItems="center" justifyContent="center">
           <Image
             alignSelf="center"

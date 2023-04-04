@@ -37,7 +37,9 @@ export const UpdateAppScreen: React.FC<Props> = ({navigation}) => {
     }
   }, [navigation, appShouldUpdate]);
 
-  if (isLoading) return <LoadingTemplate />;
+  if (isLoading) {
+    return <LoadingTemplate />;
+  }
 
   if (isError || !data) {
     return (

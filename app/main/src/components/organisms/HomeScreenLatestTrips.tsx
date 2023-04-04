@@ -13,17 +13,17 @@ export const HomeScreenLatestTrips: React.FC = () => {
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
         style={{marginTop: 8}}>
-        <Div w={180} h={180} bg="primary500" rounded="lg"></Div>
-        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg"></Div>
-        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg"></Div>
-        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg"></Div>
-        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg"></Div>
-        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg"></Div>
-        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg"></Div>
-        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg"></Div>
-        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg"></Div>
-        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg"></Div>
-        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg"></Div>
+        <Div w={180} h={180} bg="primary500" rounded="lg" />
+        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg" />
+        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg" />
+        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg" />
+        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg" />
+        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg" />
+        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg" />
+        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg" />
+        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg" />
+        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg" />
+        <Div ml="md" w={180} h={180} bg="primary500" rounded="lg" />
       </ScrollView>
     </Div>
   );

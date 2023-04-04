@@ -1,9 +1,8 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {TouchableNativeFeedback, TouchableOpacity} from 'react-native';
 import {Button, Div, Icon, Text, Skeleton} from 'react-native-magnus';
 import {useShareMyReferralCode} from '@yuju/global-hooks/useShareMyReferralCode';
 import {formatCurrency} from '@yuju/common/utils/format';
-import {useTimeout} from '@yuju/global-hooks/useTimeout';
 
 interface Props {
   goToReferralsScreen: () => void;
@@ -22,7 +21,7 @@ export const HomeScreenInviteFriends: React.FC<Props> = ({
   return (
     <Div mt="lg">
       {!myReferrals ? (
-        <Skeleton.Box rounded="lg" w="100%" h={125} bg="gray100"></Skeleton.Box>
+        <Skeleton.Box rounded="lg" w="100%" h={125} bg="gray100" />
       ) : (
         <Div rounded="lg" overflow="hidden">
           <TouchableNativeFeedback

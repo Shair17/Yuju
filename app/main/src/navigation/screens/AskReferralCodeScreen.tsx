@@ -101,7 +101,7 @@ export const AskReferralCodeScreen: React.FC<Props> = ({navigation}) => {
                   onChangeText={onChange}
                   value={value}
                   suffix={
-                    !!referralCode ? (
+                    referralCode ? (
                       isLoading ? (
                         <RNActivityIndicator />
                       ) : (
@@ -110,7 +110,9 @@ export const AskReferralCodeScreen: React.FC<Props> = ({navigation}) => {
                             const canDeleteField =
                               isError || referralCode.length !== 6;
 
-                            if (!canDeleteField) return;
+                            if (!canDeleteField) {
+                              return;
+                            }
 
                             clearErrors('referralCode');
                             resetField('referralCode');
@@ -154,7 +156,7 @@ export const AskReferralCodeScreen: React.FC<Props> = ({navigation}) => {
             ) : null}
 
             <Div mt="md">
-              <Div row opacity={!!!referralCodeResponse || isError ? 0 : 1}>
+              <Div row opacity={!referralCodeResponse || isError ? 0 : 1}>
                 <Avatar
                   size={10}
                   alignSelf="center"

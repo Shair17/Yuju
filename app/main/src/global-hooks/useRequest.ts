@@ -58,7 +58,7 @@ export function useRequest<Data = unknown, Error = unknown>(
     isLoading,
     isError: !!error,
     isValidating,
-    data: response && response.data,
+    data: response?.data,
     response,
     error,
     mutate,

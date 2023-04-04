@@ -1,5 +1,5 @@
 import React from 'react';
-import {Div, Icon, Text, DivProps} from 'react-native-magnus';
+import {Div, DivProps} from 'react-native-magnus';
 
 interface Props extends DivProps {
   id: string;
@@ -61,6 +61,7 @@ export const TripsActivityScreenTripItem: React.FC<Props> = ({
       rounded="lg"
       p="lg"
       alignItems="center"
-      {...props}></Div>
+      {...props}
+    />
   );
 };

@@ -72,9 +72,8 @@ Table drivers {
 
 Table locations {
   id String [pk]
-  address String
   name String
-  street String
+  address String
   zip String
   city String
   tag LocationTag [not null, default: 'Otro']

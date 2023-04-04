@@ -7,7 +7,9 @@ export const useShowNoConnection = () => {
   const netInfo = useNetInfo();
 
   useEffect(() => {
-    if (netInfo.isConnected == null) return;
+    if (netInfo.isConnected == null) {
+      return;
+    }
 
     const isOnline = netInfo.isConnected;
 

@@ -19,7 +19,7 @@ export const ReportsActivityScreen: React.FC<Props> = ({navigation}) => {
     myData: myReports,
     handleAddMoreItems,
   } = usePagination<Report>({
-    url: `/bug-reports/users`,
+    url: '/bug-reports/users',
   });
 
   if (isLoading) {
@@ -49,7 +49,7 @@ export const ReportsActivityScreen: React.FC<Props> = ({navigation}) => {
 
   return (
     <FlashList
-      estimatedItemSize={20}
+      estimatedItemSize={50}
       data={myReports}
       renderItem={({item: {title, description}}) => {
         return (

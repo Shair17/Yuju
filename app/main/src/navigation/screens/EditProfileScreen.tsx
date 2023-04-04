@@ -118,9 +118,9 @@ export const EditProfileScreen: React.FC<Props> = ({navigation}) => {
         birthDate: String(date),
       },
     })
-      .then(response => {
+      .then(async response => {
         if (response.data.modified) {
-          mutateMyProfile();
+          await mutateMyProfile();
         }
 
         handleShowSaveInfo();

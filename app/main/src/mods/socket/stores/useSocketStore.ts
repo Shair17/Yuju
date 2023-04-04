@@ -5,7 +5,7 @@ import io, {Socket} from 'socket.io-client';
 import {isValidToken} from '@yuju/common/utils/token';
 import {isTokenExpired} from '@yuju/services/refresh-token';
 
-export interface Driver {
+export interface BaseUser {
   id: string;
   facebookId: string;
   name: string;
@@ -14,20 +14,67 @@ export interface Driver {
   dni: string;
   avatar: string;
   isAdmin: boolean;
-  location: {
-    latitude: number;
-    longitude: number;
+}
+
+export interface Driver extends BaseUser {
+  location: ILocation;
+}
+
+export interface User extends BaseUser {
+  location: ILocation;
+}
+
+export interface ILocation {
+  latitude: number;
+  longitude: number;
+}
+
+interface InRide {
+  // this should be trip database id
+  id: string;
+  user: User;
+  driver: Driver;
+  currentLocation: ILocation;
+  // use nanoid
+  trackingCode: string;
+  from: {
+    address?: string;
+    location: ILocation;
   };
+  to: {
+    address?: string;
+    location: ILocation;
+  };
+  passengersQuantity: number;
+  ridePrice: number;
+}
+
+interface InRidePending {
+  // this should be trip database id
+  id: string;
+  // Solo hay User, el driver aún estaría pendiente...
+  user: User;
+  // y una vez se encuentre un driver pasaría a la otra cola de inRideQueue, y se removería de inRidePendingQueue
+  from: {
+    address?: string;
+    location: ILocation;
+  };
+  to: {
+    address?: string;
+    location: ILocation;
+  };
+  passengersQuantity: number;
+  ridePrice: number;
 }
 
 export type SocketStatus = 'loading' | 'online' | 'offline';
 
-type SocketStoreValues = {
+export type SocketStoreValues = {
   socket: Socket | null;
   status: SocketStatus;
   availableDrivers: Driver[];
-  isInRide: boolean;
-  isInPendingRide: boolean;
+  inRide: InRide | null;
+  inRidePending: InRidePending | null;
 };
 
 const getDefaultValues = (): SocketStoreValues => {
@@ -35,8 +82,8 @@ const getDefaultValues = (): SocketStoreValues => {
     socket: null,
     status: 'loading',
     availableDrivers: [],
-    isInRide: false,
-    isInPendingRide: false,
+    inRide: null,
+    inRidePending: null,
   };
 };
 
@@ -89,7 +136,8 @@ export const useSocketStore = create(
     setStatus: (status: SocketStatus) => set({status}),
     setAvailableDrivers: (availableDrivers: Driver[]) =>
       set({availableDrivers}),
-    setIsInRide: (isInRide: boolean) => set({isInRide}),
-    setIsInPendingRide: (isInPendingRide: boolean) => set({isInPendingRide}),
+    setInRide: (inRide: SocketStoreValues['inRide']) => set({inRide}),
+    setInRidePending: (inRidePending: SocketStoreValues['inRidePending']) =>
+      set({inRidePending}),
   })),
 );

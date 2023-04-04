@@ -256,6 +256,10 @@ dependencies {
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
 
+    implementation "androidx.core:core-splashscreen:1.0.0" // react-native-bootsplash
+
+    implementation 'com.facebook.android:facebook-android-sdk:latest.release'
+
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
         exclude group:'com.facebook.fbjni'
     }
@@ -303,6 +307,14 @@ task copyDownloadableDepsToLibs(type: Copy) {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+
+project.ext.vectoricons = [
+    // Name of the font files you want to copy
+    iconFontNames: ['Ionicons.ttf', 'MaterialCommunityIcons.ttf']
+]
+
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
 
 def isNewArchitectureEnabled() {
     // To opt-in for the New Architecture, you can either:

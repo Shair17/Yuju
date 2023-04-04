@@ -13,7 +13,7 @@ import {Separator} from '@yuju/components/atoms/Separator';
 import {LogoutButton} from '@yuju/components/atoms/LogoutButton';
 import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';
 import {ProfileScreenMyProfile} from '@yuju/components/organisms/ProfileScreenMyProfile';
-import {ProfileScreenAdBanner} from '../../components/organisms/ProfileScreenAdBanner';
+import {ProfileScreenAdBanner} from '@yuju/components/organisms/ProfileScreenAdBanner';
 
 interface Props
   extends NativeStackScreenProps<ProfileStackParams, 'ProfileScreen'> {}

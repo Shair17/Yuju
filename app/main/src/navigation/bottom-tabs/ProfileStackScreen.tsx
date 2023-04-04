@@ -16,6 +16,7 @@ import {TripsActivityScreen} from '../screens/TripsActivityScreen';
 import {MyReferralsScreen} from '../screens/MyReferralsScreen';
 import {ReferralsScreen} from '../screens/ReferralsScreen';
 import {MeetYourDriverScreen} from '../screens/MeetYourDriverScreen';
+import {AddAddressesBookmarkScreen} from '../screens/AddAddressesBookmarkScreen';
 
 export type ProfileStackParams = {
   ProfileScreen: undefined;
@@ -32,6 +33,7 @@ export type ProfileStackParams = {
   ReportsActivityScreen: undefined;
   DriversBookmarkScreen: undefined;
   AddressesBookmarkScreen: undefined;
+  AddAddressesBookmarkScreen: undefined;
   HelpCenterScreen: undefined;
   ReportBugScreen: undefined;
   AskHelpScreen: undefined;
@@ -141,6 +143,14 @@ export const ProfileStackScreen = () => {
         component={AddressesBookmarkScreen}
         options={{
           title: 'Mis Direcciones',
+        }}
+      />
+      <ProfileStack.Screen
+        name="AddAddressesBookmarkScreen"
+        component={AddAddressesBookmarkScreen}
+        options={{
+          title: 'Agregar Dirección',
+          animation: 'fade_from_bottom',
         }}
       />
       <ProfileStack.Screen

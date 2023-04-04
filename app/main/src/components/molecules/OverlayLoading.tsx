@@ -1,5 +1,5 @@
 import React, {FC} from 'react';
-import {Div, Overlay, Text} from 'react-native-magnus';
+import {Overlay, Text} from 'react-native-magnus';
 import {ActivityIndicator} from '../atoms/ActivityIndicator';
 
 interface Props {

@@ -18,6 +18,7 @@ import {useDimensions} from '@yuju/global-hooks/useDimensions';
 import Physics, {resetPipes} from '@yuju/mods/minigame/components/Physics';
 import {Floor} from '@yuju/mods/minigame/components/Floor';
 import {Bird} from '@yuju/mods/minigame/components/Bird';
+import {minigameStyles} from '@yuju/styles/minigame.styles';
 
 interface Props
   extends NativeStackScreenProps<RootStackParams, 'MinigameScreen'> {}
@@ -139,16 +140,7 @@ export const MinigameScreen: React.FC<Props> = ({navigation}) => {
         </Text>
       </Div>
       {!running && (
-        <TouchableOpacity
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            flex: 1,
-          }}
-          onPress={reset}>
+        <TouchableOpacity style={minigameStyles.container} onPress={reset}>
           <Div
             position="absolute"
             top={0}

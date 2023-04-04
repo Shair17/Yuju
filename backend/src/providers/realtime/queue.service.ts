@@ -1,9 +1,10 @@
 import {Inject, Service, Initializer, Destructor} from 'fastify-decorators';
 import {LoggerService} from '../../common/logger/logger.service';
 import {AuthTokenPayload} from '../../interfaces/tokens';
-import {ILocation} from './realtime.service';
-import {OnModuleInit, OnModuleDestroy} from '../../interfaces/module';
 import {getDistance} from '../../common/utils/location';
+import {TripService} from '../../modules/trip/trip.service';
+import {OnModuleInit, OnModuleDestroy} from '../../interfaces/module';
+import {ILocation} from './realtime.service';
 
 interface Driver extends AuthTokenPayload {
   location: ILocation;
@@ -13,7 +14,7 @@ interface User extends AuthTokenPayload {
   location: ILocation;
 }
 
-interface InRide {
+export interface InRide {
   // this should be trip database id
   id: string;
   user: User;
@@ -33,7 +34,7 @@ interface InRide {
   ridePrice: number;
 }
 
-interface InRidePending {
+export interface InRidePending {
   // this should be trip database id
   id: string;
   // Solo hay User, el driver aún estaría pendiente...
@@ -60,11 +61,16 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
   private timer: NodeJS.Timer;
 
+  @Inject(TripService)
+  private readonly tripService: TripService;
+
   @Inject(LoggerService)
   private readonly loggerService: LoggerService;
 
   @Initializer()
-  onModuleInit() {
+  async onModuleInit() {
+    await this.loadTrips();
+
     this.timer = setInterval(() => {
       for (const [id, {name, location}] of this.driversQueue) {
         this.loggerService.info(
@@ -115,6 +121,30 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   @Destructor()
   onModuleDestroy() {
     clearInterval(this.timer);
+  }
+
+  async loadTrips(): Promise<void> {
+    const trips = await this.tripService.getTripsForQueue();
+
+    if (trips.length > 0) {
+      this.loggerService.info('Queue Service is loading trips...');
+
+      for (let index = 0; index < trips.length; index++) {
+        const trip = trips[index];
+        this.enqueueToInRidePending(trip);
+        this.loggerService.info(
+          `Trip with id ${trip.id} enqueue to in ride pending queue.`,
+        );
+      }
+
+      this.loggerService.info(
+        `Queue Service has been finished, loaded ${trips.length} trips.`,
+      );
+    } else {
+      this.loggerService.info(
+        `Queue Service has been finished, no trips found.`,
+      );
+    }
   }
 
   /** Users */
@@ -232,6 +262,19 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     if (!this.existsInRideQueue(inRide.id)) return;
 
     this.enqueueToInRide(inRide);
+  }
+
+  updateInRideLocation(id: string, location: ILocation): void {
+    if (!this.existsInRideQueue(id)) return;
+
+    const inRide = this.getFromInRideQueue(id);
+
+    if (!inRide) return;
+
+    this.enqueueToInRide({
+      ...inRide,
+      currentLocation: location,
+    });
   }
 
   getFromInRideQueue(id: string) {
@@ -385,6 +428,18 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     return inRidePending;
   }
 
+  getFromInRideQueueByTrackingCode(trackingCode: string): InRide | null {
+    let inRide: InRide | null = null;
+
+    this.inRideQueue.forEach(inRideItem => {
+      if (inRideItem.trackingCode === trackingCode) {
+        inRide = inRideItem;
+      }
+    });
+
+    return inRide;
+  }
+
   sizes() {
     return {
       users: this.usersQueueSize(),
@@ -393,323 +448,340 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
+  inRidePendingToArray() {
+    return Array.from(this.inRidePendingQueue.values());
+  }
+
   usersToArray(): User[] {
-    return Array.from(this.usersQueue.values());
+    const users = Array.from(this.usersQueue.values());
+    const availableUsers = users.filter(
+      user =>
+        !this.userExistsInRide(user.id) &&
+        !this.userExistsInRidePending(user.id),
+    );
+
+    return availableUsers;
   }
 
   driversToArray(): Driver[] {
-    return [
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '1',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.232198789888603,
-          longitude: -79.42413003835996,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '12',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.232039422834763,
-          longitude: -79.42268342626699,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '13',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.23138539247555,
-          longitude: -79.41827878881867,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '14',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.2333249280210845,
-          longitude: -79.42499088794959,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '15',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.230136444977575,
-          longitude: -79.42706493454632,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '16',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.229961660358475,
-          longitude: -79.42320590380129,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '17',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.231878649252484,
-          longitude: -79.42783219394416,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '18',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.230579852633565,
-          longitude: -79.42192346112886,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '19',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.228634667045279,
-          longitude: -79.4233499953256,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '112',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.230654437151617,
-          longitude: -79.41690563389751,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '124',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.230940850293583,
-          longitude: -79.419255151521,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '151',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.229891744664079,
-          longitude: -79.41380373629244,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '1123',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.230970402535964,
-          longitude: -79.41098121397606,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '154',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.228206725603833,
-          longitude: -79.42765110912202,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '165',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.232198789888603,
-          longitude: -79.42413003835996,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '187',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.227534407638503,
-          longitude: -79.42931930174386,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '1156',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.227467914584496,
-          longitude: -79.42448601158114,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '134543',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.228162396952148,
-          longitude: -79.43150135727964,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '1fsf',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.2226361737839175,
-          longitude: -79.4304045526686,
-        },
-      },
-      {
-        avatar: 'https://i.imgur.com/53zR2sh.jpeg',
-        dni: '12345678',
-        email: 'hello@rix.dev',
-        facebookId: '123456',
-        id: '1fsaxsa',
-        isAdmin: false,
-        name: 'Roberto',
-        phoneNumber: '987654321',
-        location: {
-          latitude: -7.225015166351945,
-          longitude: -79.43165569710223,
-        },
-      },
-    ];
-    // return Array.from(this.driversQueue.values());
+    // return [
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '1',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.232198789888603,
+    //       longitude: -79.42413003835996,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '12',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.232039422834763,
+    //       longitude: -79.42268342626699,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '13',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.23138539247555,
+    //       longitude: -79.41827878881867,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '14',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.2333249280210845,
+    //       longitude: -79.42499088794959,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '15',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.230136444977575,
+    //       longitude: -79.42706493454632,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '16',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.229961660358475,
+    //       longitude: -79.42320590380129,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '17',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.231878649252484,
+    //       longitude: -79.42783219394416,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '18',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.230579852633565,
+    //       longitude: -79.42192346112886,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '19',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.228634667045279,
+    //       longitude: -79.4233499953256,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '112',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.230654437151617,
+    //       longitude: -79.41690563389751,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '124',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.230940850293583,
+    //       longitude: -79.419255151521,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '151',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.229891744664079,
+    //       longitude: -79.41380373629244,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '1123',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.230970402535964,
+    //       longitude: -79.41098121397606,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '154',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.228206725603833,
+    //       longitude: -79.42765110912202,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '165',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.232198789888603,
+    //       longitude: -79.42413003835996,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '187',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.227534407638503,
+    //       longitude: -79.42931930174386,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '1156',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.227467914584496,
+    //       longitude: -79.42448601158114,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '134543',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.228162396952148,
+    //       longitude: -79.43150135727964,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '1fsf',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.2226361737839175,
+    //       longitude: -79.4304045526686,
+    //     },
+    //   },
+    //   {
+    //     avatar: 'https://i.imgur.com/53zR2sh.jpeg',
+    //     dni: '12345678',
+    //     email: 'hello@rix.dev',
+    //     facebookId: '123456',
+    //     id: '1fsaxsa',
+    //     isAdmin: false,
+    //     name: 'Roberto',
+    //     phoneNumber: '987654321',
+    //     location: {
+    //       latitude: -7.225015166351945,
+    //       longitude: -79.43165569710223,
+    //     },
+    //   },
+    // ];
+    const drivers = Array.from(this.driversQueue.values());
+    const availableDrivers = drivers.filter(
+      driver => !this.driverExistsInRide(driver.id),
+    );
+
+    return availableDrivers;
   }
 
-  _driversToArray() {
-    return ['hola', 'mundo', 'soy', 'shair'];
-  }
-
-  getClosestDriver(passengerLocation: ILocation): Driver | null {
+  getClosestDriver(passengerLocation: ILocation, index = 0): Driver | null {
     if (passengerLocation.latitude === 0 || passengerLocation.longitude === 0) {
       return null;
     }
 
     const drivers = this.driversToArray();
 
-    const sortedDrivers = drivers.sort((prevDriver, nextDriver) => {
-      const distanceToA = getDistance(passengerLocation, prevDriver.location);
-      const distanceToB = getDistance(passengerLocation, nextDriver.location);
+    if (index >= drivers.length) {
+      return null;
+    }
 
-      return distanceToA - distanceToB;
-    });
+    const sortedDrivers = drivers
+      .slice(index)
+      .sort((prevDriver, nextDriver) => {
+        const distanceToA = getDistance(passengerLocation, prevDriver.location);
+        const distanceToB = getDistance(passengerLocation, nextDriver.location);
+
+        return distanceToA - distanceToB;
+      });
 
     if (sortedDrivers.length > 0) {
-      // Select the first closest driver
       const foundDriver = sortedDrivers[0];
 
       if (
         foundDriver.location.latitude === 0 ||
         foundDriver.location.longitude === 0
       ) {
-        return null;
+        return this.getClosestDriver(passengerLocation, index + 1);
       }
 
       return foundDriver;
@@ -717,4 +789,35 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
     return null;
   }
+
+  // getClosestDriver(passengerLocation: ILocation): Driver | null {
+  //   if (passengerLocation.latitude === 0 || passengerLocation.longitude === 0) {
+  //     return null;
+  //   }
+
+  //   const drivers = this.driversToArray();
+
+  //   const sortedDrivers = drivers.sort((prevDriver, nextDriver) => {
+  //     const distanceToA = getDistance(passengerLocation, prevDriver.location);
+  //     const distanceToB = getDistance(passengerLocation, nextDriver.location);
+
+  //     return distanceToA - distanceToB;
+  //   });
+
+  //   if (sortedDrivers.length > 0) {
+  //     // Select the first closest driver
+  //     const foundDriver = sortedDrivers[0];
+
+  //     if (
+  //       foundDriver.location.latitude === 0 ||
+  //       foundDriver.location.longitude === 0
+  //     ) {
+  //       return null;
+  //     }
+
+  //     return foundDriver;
+  //   }
+
+  //   return null;
+  // }
 }

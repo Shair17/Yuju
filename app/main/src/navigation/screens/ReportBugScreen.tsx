@@ -4,42 +4,21 @@ import {Button, Div, Icon, Input, Text} from 'react-native-magnus';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {ProfileStackParams} from '../bottom-tabs/ProfileStackScreen';
 import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';
-import {useForm, Controller} from 'react-hook-form';
-import {z} from 'zod';
-import useAxios from 'axios-hooks';
-import {zodResolver} from '@hookform/resolvers/zod';
-import {CreateBugReportBody, CreateBugReportResponse} from '@yuju/types/app';
+import {Controller} from 'react-hook-form';
+import {useBugReport} from '@yuju/global-hooks/useBugReport';
 import {Notifier} from 'react-native-notifier';
-
-export const schemaValidator = z.object({
-  title: z.string(),
-  description: z.string(),
-  extra: z.optional(z.string()),
-});
-
-type FormDataValues = {
-  title: string;
-  description: string;
-  extra?: string;
-};
 
 interface Props
   extends NativeStackScreenProps<ProfileStackParams, 'ReportBugScreen'> {}
 
 export const ReportBugScreen: React.FC<Props> = ({navigation}) => {
-  const [{loading}, executeCreateBugReport] = useAxios<
-    CreateBugReportResponse,
-    CreateBugReportBody
-  >(
-    {
-      method: 'POST',
-      url: '/bug-reports/users',
-    },
-    {manual: true},
-  );
-  const {control, handleSubmit, formState} = useForm<FormDataValues>({
-    resolver: zodResolver(schemaValidator),
-  });
+  const {
+    bugReportIsLoading,
+    control,
+    executeCreateBugReport,
+    formState,
+    handleSubmit,
+  } = useBugReport();
 
   const handleSubmitBug = handleSubmit(data => {
     executeCreateBugReport({
@@ -48,19 +27,17 @@ export const ReportBugScreen: React.FC<Props> = ({navigation}) => {
         description: data.description,
         extra: data.extra,
       },
-    })
-      .then(response => {
-        if (response.data.created) {
-          Notifier.showNotification({
-            title: 'Reportes',
-            description:
-              'Tu reporte ha sido enviado, gracias por ayudar a mejorar Yuju.',
-          });
-        }
+    }).then(response => {
+      if (response.data.created) {
+        Notifier.showNotification({
+          title: 'Reportes',
+          description:
+            'Tu reporte ha sido enviado, gracias por ayudar a mejorar Yuju.',
+        });
+      }
 
-        navigation.goBack();
-      })
-      .catch(console.log);
+      navigation.goBack();
+    });
   });
 
   return (
@@ -213,7 +190,7 @@ export const ReportBugScreen: React.FC<Props> = ({navigation}) => {
             block
             fontWeight="bold"
             h={55}
-            loading={loading}
+            loading={bugReportIsLoading}
             fontSize="3xl"
             onPress={handleSubmitBug}>
             Enviar

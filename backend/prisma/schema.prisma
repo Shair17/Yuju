@@ -136,9 +136,8 @@ model Location {
   id String @id @default(cuid())
 
   // Optional because it can be a trip or saved location for user's or driver's accounts
-  address String?
   name    String?
-  street  String?
+  address String?
   zip     String?
   city    String?
 

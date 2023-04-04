@@ -8,15 +8,14 @@ import {
 import {Server, Socket} from 'socket.io';
 import {OnModuleInit} from '../../interfaces/module';
 import {LoggerService} from '../../common/logger/logger.service';
-// import {DriverService} from '../../modules/driver/driver.service';
-// import {UserService} from '../../modules/user/user.service';
-import {QueueService} from './queue.service';
+import {QueueService, InRide} from './queue.service';
 import {JwtService, JwtPayload} from '../../shared/tokens/jwt.service';
 import {isValidToken} from '../../common/helpers/token';
 import {isString} from '../../common/utils/string';
 import {ConfigService} from '../../config/config.service';
 import {AuthTokenPayload} from '../../interfaces/tokens';
 import {DatabaseService} from '../../database/database.service';
+import {TripStatus} from '@prisma/client';
 
 export interface ILocation {
   latitude: number;
@@ -170,17 +169,16 @@ export class RealTimeService implements OnModuleInit {
       location: {latitude: 0, longitude: 0},
     });
 
-    // Emitir al usuario si está en un viaje o no
-    socket.emit(
-      'PASSENGER_IS_IN_RIDE',
-      this.queueService.userExistsInRide(user.id),
-    );
+    if (this.queueService.userExistsInRidePending(user.id)) {
+      socket.emit(
+        'PASSENGER_IN_RIDE_PENDING',
+        this.queueService.userIsInRidePending(user.id),
+      );
+    }
 
-    // Emitir al usuario si está en un viaje pendiente o no
-    socket.emit(
-      'PASSENGER_IS_IN_RIDE_PENDING',
-      this.queueService.userExistsInRidePending(user.id),
-    );
+    if (this.queueService.userExistsInRide(user.id)) {
+      socket.emit('PASSENGER_IN_RIDE', this.queueService.userIsInRide(user.id));
+    }
 
     socket.emit('AVAILABLE_DRIVERS', this.queueService.driversToArray());
 
@@ -208,16 +206,24 @@ export class RealTimeService implements OnModuleInit {
 
     // El pasajero (usuario) solicitó una carrera
     socket.on('REQUEST_RIDE', async (data: IRequestRide) => {
-      // console.log(data);
+      if (this.queueService.userExistsInRidePending(data.passengerId)) {
+        this.client
+          .of('/users')
+          .to(data.passengerId)
+          .emit(
+            'PASSENGER_IN_RIDE_PENDING',
+            this.queueService.userIsInRidePending(user.id),
+          );
 
-      if (
-        this.queueService.userExistsInRide(data.passengerId) ||
-        this.queueService.userExistsInRidePending(data.passengerId)
-      ) {
-        console.log('nel');
+        return;
+      } else if (this.queueService.userExistsInRide(data.passengerId)) {
+        this.client
+          .of('/users')
+          .to(data.passengerId)
+          .emit('PASSENGER_IN_RIDE', this.queueService.userIsInRide(user.id));
+
         return;
       } else {
-        console.log('si');
         const {passengerId, from, to, passengersQuantity, ridePrice} = data;
 
         const createdTrip = await this.databaseService.trip.create({
@@ -243,6 +249,7 @@ export class RealTimeService implements OnModuleInit {
                 id: passengerId,
               },
             },
+            status: TripStatus.Pending,
           },
         });
 
@@ -262,18 +269,88 @@ export class RealTimeService implements OnModuleInit {
           .of('/users')
           .to(data.passengerId)
           .emit(
-            'PASSENGER_IS_IN_RIDE_PENDING',
-            this.queueService.userExistsInRidePending(user.id),
+            'PASSENGER_IN_RIDE_PENDING',
+            this.queueService.userIsInRidePending(user.id),
           );
-        // Aquí establecer un estado de que se está buscando... con socket
-        // socket
-        // .to(data.passengerId)
-        // .emit('LOOKING_FOR_DRIVER', 'está buscando...');
-        // Buscar los choferes (Mototaxistas), puede ser a los más cercanos o a todos, y solo notificarle a los que no están en una carrera
-        // Si se encontró mototaxista y este aceptó,
-        // caso contrario, notificarle al usuario que nadie quiso aceptar su carrera y terminar la carga que se inició hace un momento
+
+        // Obtener el chofer más cercano
+        const closestDriver = this.queueService.getClosestDriver(from.location);
+
+        if (!closestDriver) {
+          // No se encontró chofer cercano entonces emitir a todos los choferes de las carreras pendientes
+          this.client
+            .of('/drivers')
+            .emit('PENDING_RIDES', this.queueService.inRidePendingToArray());
+          return;
+        }
+
+        const rideRequest = data;
+
+        // Emitir al driver más cercano la solicitud de carrera
+        this.client
+          .of('/drivers')
+          .to(closestDriver.id)
+          .emit('RIDE_REQUEST', rideRequest);
       }
     });
+
+    socket.on(
+      'RIDE_LOCATION_UPDATE',
+      (data: {
+        id: InRide['id'];
+        passenger: {id: InRide['user']['id']};
+        driver: {id: InRide['driver']['id']};
+        location: ILocation;
+      }) => {
+        if (
+          !this.queueService.userExistsInRide(data.passenger.id) ||
+          !this.queueService.driverExistsInRide(data.driver.id)
+        )
+          return;
+
+        this.queueService.updateInRideLocation(data.id, data.location);
+      },
+    );
+
+    // El pasajero (usuario) cancela una carrera
+    socket.on(
+      'CANCEL_RIDE',
+      async (data: {
+        id: InRide['id'];
+        passenger: {id: InRide['user']['id']};
+        driver: {id: InRide['driver']['id']};
+      }) => {
+        if (!this.queueService.userExistsInRide(data.passenger.id)) return;
+
+        this.queueService.deleteFromInRideQueue(data.id);
+
+        await this.databaseService.trip.update({
+          where: {
+            id: data.id,
+          },
+          data: {
+            status: TripStatus.Cancelled,
+          },
+        });
+
+        this.client.of('/drivers').to(data.driver.id).emit('CANCEL_RIDE', data);
+      },
+    );
+
+    socket.on(
+      'TRACK_TRIP',
+      (trackingCode: string, cb: (isOnline: InRide | null) => void) => {
+        if (
+          this.queueService.userExistsInRidePending(user.id) ||
+          this.queueService.userExistsInRide(user.id)
+        ) {
+          cb(null);
+          return;
+        }
+
+        cb(this.queueService.getFromInRideQueueByTrackingCode(trackingCode));
+      },
+    );
 
     socket.on('disconnect', async reason => {
       this.queueService.deleteFromUsersQueue(user.id);
@@ -291,33 +368,78 @@ export class RealTimeService implements OnModuleInit {
       location: {latitude: 0, longitude: 0},
     });
 
-    // Eventos
+    this.client
+      .of('/users')
+      .emit('AVAILABLE_DRIVERS', this.queueService.driversToArray());
 
-    // Emitir globalmente todos los choferes disponibles
-    // this.client.emit(
-    //   'AVAILABLE_DRIVERS',
-    //   this.queueService._driversToArray(),
-    // );
-    this.queueService.usersToArray().forEach(user => {
-      socket
-        .to(user.id)
-        .emit('AVAILABLE_DRIVERS', this.queueService.driversToArray());
+    if (this.queueService.driverExistsInRide(driver.id)) {
+      socket.emit(
+        'DRIVER_IN_RIDE',
+        this.queueService.driverIsInRide(driver.id),
+      );
+    }
+
+    socket.on('RIDE_REQUEST', async (data: IRequestRide) => {
+      if (this.queueService.driverExistsInRide(driver.id)) {
+        socket.emit(
+          'DRIVER_IN_RIDE',
+          this.queueService.driverIsInRide(driver.id),
+        );
+        return;
+      }
     });
 
-    // Emitir al chofer si está en un viaje o no
-    socket.emit('DRIVER_IS_IN_RIDE', () =>
-      this.queueService.driverExistsInRide(driver.id),
+    socket.on(
+      'RIDE_LOCATION_UPDATE',
+      (data: {
+        id: InRide['id'];
+        passenger: {id: InRide['user']['id']};
+        driver: {id: InRide['driver']['id']};
+        location: ILocation;
+      }) => {
+        if (
+          !this.queueService.userExistsInRide(data.passenger.id) ||
+          !this.queueService.driverExistsInRide(data.driver.id)
+        )
+          return;
+
+        this.queueService.updateInRideLocation(data.id, data.location);
+      },
+    );
+
+    socket.on(
+      'CANCEL_RIDE',
+      async (data: {
+        id: InRide['id'];
+        passenger: {id: InRide['user']['id']};
+        driver: {id: InRide['driver']['id']};
+      }) => {
+        if (!this.queueService.driverExistsInRide(data.driver.id)) return;
+
+        this.queueService.deleteFromInRideQueue(data.id);
+
+        await this.databaseService.trip.update({
+          where: {
+            id: data.id,
+          },
+          data: {
+            status: TripStatus.Cancelled,
+          },
+        });
+
+        this.client
+          .of('/users')
+          .to(data.passenger.id)
+          .emit('CANCEL_RIDE', data);
+      },
     );
 
     socket.on('disconnect', async reason => {
       this.queueService.deleteFromDriversQueue(driver.id);
 
-      this.queueService.usersToArray().forEach(user => {
-        this.client
-          .of('/users')
-          .to(user.id)
-          .emit('AVAILABLE_DRIVERS', this.queueService.driversToArray());
-      });
+      this.client
+        .of('/users')
+        .emit('AVAILABLE_DRIVERS', this.queueService.driversToArray());
     });
   }
 

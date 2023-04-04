@@ -30,7 +30,9 @@ export const usePagination = <T extends {id: string}>({
   });
 
   const handleAddMoreItems = () => {
-    if (isLoading || !data || !hasNextPage) return;
+    if (isLoading || !data || !hasNextPage) {
+      return;
+    }
 
     setPage(page + 1);
   };

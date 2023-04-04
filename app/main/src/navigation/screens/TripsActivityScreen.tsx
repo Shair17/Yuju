@@ -1,10 +1,10 @@
 import React from 'react';
 import {Div, Image, Skeleton, Text, useTheme} from 'react-native-magnus';
-import {FlashList} from '@shopify/flash-list';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {TripsActivityScreenTripItem} from '@yuju/components/organisms/TripsActivityScreenTripItem';
 import {ProfileStackParams} from '../bottom-tabs/ProfileStackScreen';
 import {usePagination} from '@yuju/global-hooks/usePagination';
-import {TripsActivityScreenTripItem} from '@yuju/components/organisms/TripsActivityScreenTripItem';
+import {FlashList} from '@shopify/flash-list';
 import {MyTrip} from '@yuju/types/app';
 
 interface Props
@@ -49,7 +49,7 @@ export const TripsActivityScreen: React.FC<Props> = ({navigation}) => {
 
   return (
     <FlashList
-      estimatedItemSize={20}
+      estimatedItemSize={50}
       data={myTrips}
       renderItem={({
         item: {

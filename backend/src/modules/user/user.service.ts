@@ -17,7 +17,6 @@ import {MAXIMUM_REFERRALS} from '../../common/constants/app';
 import {GetIsBannedResponseType} from './schemas/is-banned.response';
 import {GetUserMyDriversQueryType} from './schemas/get-user-my-drivers.query';
 import {CreateAddressBodyType} from './schemas/create-address.body';
-// import {DniService} from '../../providers/dni/dni.service';
 
 type UpdateTokens = {
   accessToken: string | null;
@@ -31,9 +30,6 @@ export class UserService {
 
   @Inject(CloudinaryService)
   private readonly cloudinaryService: CloudinaryService;
-
-  // @Inject(DniService)
-  // private readonly dniService: DniService;
 
   async getMyAddresses(id: string) {
     const user = await this.databaseService.user.findUnique({
@@ -49,7 +45,6 @@ export class UserService {
     }
 
     return {
-      success: true,
       addresses: user.myAddresses,
     };
   }
@@ -99,7 +94,7 @@ export class UserService {
     }
 
     const [name] = trimStrings(data.name);
-    const {latitude, longitude, tag, address, city, street, zip} = data;
+    const {latitude, longitude, tag, address, city, zip} = data;
 
     const updatedUser = await this.databaseService.user.update({
       where: {
@@ -114,7 +109,6 @@ export class UserService {
             tag,
             address,
             city,
-            street,
             zip,
           },
         },
@@ -155,7 +149,7 @@ export class UserService {
     );
 
     if (!foundAddress) {
-      throw new Unauthorized(`CANNOT_DELETE_ADDRESS`);
+      throw new BadRequest(`CANNOT_DELETE_ADDRESS`);
     }
 
     const deletedAddress = await this.databaseService.location.delete({

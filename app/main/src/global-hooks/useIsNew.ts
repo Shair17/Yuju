@@ -7,7 +7,7 @@ export const useIsNew = (): boolean => {
   const isAuthenticated = useIsAuthenticated();
   const isNew = useAuthStore(s => s.isNew);
   const setIsNew = useAuthStore(s => s.setIsNew);
-  const {data: IamNewUser} = useRequest<boolean>(
+  const {data: IamNewUser, isError} = useRequest<boolean>(
     isAuthenticated
       ? {
           method: 'GET',
@@ -17,12 +17,14 @@ export const useIsNew = (): boolean => {
   );
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      return;
+    }
 
     if (typeof IamNewUser === 'boolean') {
       setIsNew(IamNewUser);
     }
-  }, [isAuthenticated, IamNewUser]);
+  }, [isAuthenticated, IamNewUser, setIsNew]);
 
   return isNew;
 };

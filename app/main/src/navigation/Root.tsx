@@ -86,7 +86,9 @@ export const Root: React.FC = () => {
   // appShouldUpdate === 'error';
 
   useEffect(() => {
-    if (!isAuthenticated || isNew) return;
+    if (!isAuthenticated || isNew) {
+      return;
+    }
 
     socket?.emit('PASSENGER_LOCATION', userLocation);
 

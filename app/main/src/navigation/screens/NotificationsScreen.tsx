@@ -50,8 +50,8 @@ export const NotificationsScreen: React.FC<Props> = ({navigation}) => {
 
   return (
     <FlashList
+      estimatedItemSize={50}
       keyExtractor={notification => notification.id}
-      estimatedItemSize={20}
       contentContainerStyle={{
         backgroundColor: colors?.body,
         paddingBottom: 100,

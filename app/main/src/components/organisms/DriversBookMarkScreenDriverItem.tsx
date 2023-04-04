@@ -34,6 +34,7 @@ export const DriversBookMarkScreenDriverItem: React.FC<Props> = ({
       rounded="lg"
       p="lg"
       alignItems="center"
-      {...props}></Div>
+      {...props}
+    />
   );
 };

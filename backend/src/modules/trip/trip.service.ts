@@ -6,6 +6,8 @@ import {GetMeetYourDriverParamsType} from './schemas/meet-your-driver.params.sch
 import {RatingService} from '../rating/rating.service';
 import {NotFound} from 'http-errors';
 import {GetUserTripsQueryType} from './schemas/get-user-trips.query';
+import {TripStatus} from '@prisma/client';
+import {InRidePending} from '../../providers/realtime/queue.service';
 
 @Service('TripServiceToken')
 export class TripService {
@@ -191,5 +193,88 @@ export class TripService {
     }
 
     return trip;
+  }
+
+  async getTripsForQueue(): Promise<InRidePending[]> {
+    const tripsFromDB = await this.databaseService.trip.findMany({
+      where: {
+        status: TripStatus.Pending,
+      },
+      select: {
+        id: true,
+        price: true,
+        passengersQuantity: true,
+        from: {
+          select: {
+            latitude: true,
+            longitude: true,
+            address: true,
+          },
+        },
+        to: {
+          select: {
+            latitude: true,
+            longitude: true,
+            address: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            facebookId: true,
+            isAdmin: true,
+            profile: {
+              select: {
+                phoneNumber: true,
+                name: true,
+                avatar: true,
+                dni: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const trips: InRidePending[] = tripsFromDB.map(
+      ({id, price, passengersQuantity, user, from, to}) => {
+        return {
+          id,
+          ridePrice: price,
+          passengersQuantity,
+          user: {
+            id: user.id,
+            phoneNumber: user.profile.phoneNumber!,
+            name: user.profile.name,
+            avatar: user.profile.avatar,
+            dni: user.profile.dni!,
+            email: user.profile.email!,
+            facebookId: user.facebookId,
+            isAdmin: user.isAdmin,
+            location: {
+              latitude: from.latitude,
+              longitude: from.longitude,
+            },
+          },
+          from: {
+            address: from.address ?? undefined,
+            location: {
+              latitude: from.latitude,
+              longitude: from.longitude,
+            },
+          },
+          to: {
+            address: to.address ?? undefined,
+            location: {
+              latitude: to.latitude,
+              longitude: to.longitude,
+            },
+          },
+        };
+      },
+    );
+
+    return trips;
   }
 }

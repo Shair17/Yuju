@@ -71,9 +71,9 @@ export const AskProfileDataScreen: React.FC<Props> = ({
         birthDate: String(date),
       },
     })
-      .then(() => {
-        mutateMyProfile();
-        mutateIsNewUser();
+      .then(async () => {
+        await mutateMyProfile();
+        await mutateIsNewUser();
       })
       .catch(error => {
         // Error: INVALID_DNI

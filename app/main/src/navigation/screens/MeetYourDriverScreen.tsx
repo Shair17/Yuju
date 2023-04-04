@@ -1,5 +1,5 @@
 import React, {useState, Fragment} from 'react';
-import {StatusBar, TouchableOpacity} from 'react-native';
+import {StatusBar, TouchableOpacity, StyleSheet} from 'react-native';
 import {Div, Text, Avatar, Icon, Image} from 'react-native-magnus';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RequestStackParams} from '../bottom-tabs/RequestStackScreen';
@@ -10,6 +10,8 @@ import {useDimensions} from '@yuju/global-hooks/useDimensions';
 import {PhotoPreviewOverlay} from '@yuju/components/atoms/PhotoPreviewOverlay';
 import Carousel from 'react-native-reanimated-carousel';
 import {formatDate} from '@yuju/common/utils/format';
+import {useSocketIsDriverOnline} from '@yuju/mods/socket/hooks/useSocketIsDriverOnline';
+import {globalStyles} from '@yuju/styles/globals';
 
 interface Props
   extends NativeStackScreenProps<RequestStackParams, 'MeetYourDriverScreen'> {}
@@ -23,9 +25,12 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
     url: `/trips/meet-your-driver/${driverId}`,
   });
   const [photo, setPhoto] = useState(myDriverProfile?.driver.avatar);
+  const isOnline = useSocketIsDriverOnline(driverId);
   const {
     window: {width: windowWidth},
   } = useDimensions();
+
+  console.log({isOnline});
 
   const openPhotoOverlay = (photo: string) => {
     setPhoto(photo);
@@ -192,7 +197,7 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
             <Carousel
               loop
               width={windowWidth}
-              style={{flex: 1}}
+              style={globalStyles.container}
               autoPlay={true}
               data={myDriverProfile?.driver.vehiclesPhotos ?? []}
               scrollAnimationDuration={1000}
@@ -201,10 +206,7 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
                   key={index.toString()}
                   activeOpacity={0.9}
                   onPress={() => openPhotoOverlay(photo)}
-                  style={{
-                    flex: 1,
-                    borderRadius: 100,
-                  }}>
+                  style={styles.carouselPressable}>
                   <Image flex={1} rounded="lg" source={{uri: photo}} />
                 </TouchableOpacity>
               )}
@@ -317,3 +319,10 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
     </ScrollScreen>
   );
 };
+
+const styles = StyleSheet.create({
+  carouselPressable: {
+    flex: 1,
+    borderRadius: 100,
+  },
+});

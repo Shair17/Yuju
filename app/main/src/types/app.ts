@@ -141,6 +141,48 @@ export type MyTripsActivityResponse = {
   total: number;
 };
 
+export interface CreateAddressResponse {
+  success: boolean;
+  id: string;
+  addresses: GetMyAddressesResponse['addresses'];
+  created: boolean;
+}
+
+export interface CreateAddressBody {
+  name: string;
+  address: string;
+  zip: string;
+  city: string;
+  tag: TagType;
+  latitude: number;
+  longitude: number;
+}
+
+export type TagType =
+  | 'Casa'
+  | 'Amigo'
+  | 'Pareja'
+  | 'Trabajo'
+  | 'Universidad'
+  | 'Otro';
+
+export type MyAddress = {
+  id: string;
+  address: string | null;
+  name: string | null;
+  zip: string | null;
+  city: string | null;
+  tag: TagType;
+  latitude: number;
+  longitude: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type GetMyAddressesResponse = {
+  addresses: MyAddress[];
+};
+
 export type MyDriver = {
   id: string;
   profile: {

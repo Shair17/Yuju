@@ -45,7 +45,7 @@ export const ChooseLocationScreenHeading: React.FC<Props> = ({
     return () => {
       clearInterval(intervalId);
     };
-  }, []);
+  }, [cities, changeCitieInterval]);
 
   return (
     <Div>

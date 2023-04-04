@@ -17,6 +17,7 @@ import {RequestScreenAskExtraInfo} from '@yuju/components/organisms/RequestScree
 import {RequestScreenAskAddressesSeparator} from '@yuju/components/organisms/RequestScreenAskAddressesSeparator';
 import {RequestScreenAskAddressItem} from '@yuju/components/organisms/RequestScreenAskAddressItem';
 import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {globalStyles} from '@yuju/styles/globals';
 
 interface Props
   extends NativeStackScreenProps<RequestStackParams, 'RequestScreen'> {}
@@ -49,10 +50,37 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
   const following = useRef<boolean>(true);
   const socket = useSocketStore(s => s.socket);
   const availableDrivers = useSocketStore(s => s.availableDrivers);
-  const isInRide = useSocketStore(s => s.isInRide);
-  const isInPendingRide = useSocketStore(s => s.isInPendingRide);
+  const inRide = useSocketStore(s => s.inRide);
+  const inRidePending = useSocketStore(s => s.inRidePending);
+  const disabledToRequestRide = !!inRide || !!inRidePending;
 
-  console.log({isInRide, isInPendingRide});
+  console.log({inRide, inRidePending, disabledToRequestRide});
+
+  const sendRequestRide = () => {
+    if (disabledToRequestRide) {
+      return;
+    }
+
+    socket?.emit('REQUEST_RIDE', {
+      passengerId: myProfile?.user.id,
+      from: {
+        address: currentAddress,
+        location: {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+        },
+      },
+      to: {
+        address: currentAddress,
+        location: {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+        },
+      },
+      passengersQuantity: passengersCount,
+      ridePrice: price,
+    });
+  };
 
   // const handleSheetChanges = useCallback((index: number) => {
   // console.log('handleSheetChanges', index);
@@ -92,14 +120,6 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
       center: {latitude, longitude},
     });
   };
-
-  useEffect(() => {
-    socket?.on('LOOKING_FOR_DRIVER', data => console.log(data));
-
-    return () => {
-      socket?.off('LOOKING_FOR_DRIVER');
-    };
-  }, [socket]);
 
   useEffect(() => {
     fillLocationInputs();
@@ -151,7 +171,7 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
       <Div flex={1} style={StyleSheet.absoluteFillObject}>
         <MapView
           ref={el => (mapRef.current = el!)}
-          style={{flex: 1}}
+          style={globalStyles.container}
           provider={PROVIDER_GOOGLE}
           showsUserLocation
           initialRegion={{
@@ -228,7 +248,7 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
         snapPoints={snapPoints}
         // onChange={handleSheetChanges}
       >
-        <BottomSheetView style={{flex: 1}}>
+        <BottomSheetView style={globalStyles.container}>
           <Div px="2xl" pt="lg" flex={1}>
             <Div>
               {/** Separator */}
@@ -248,7 +268,7 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
                 }
                 locationInputLabel="Desde"
                 locationValue={
-                  !!currentAddress ? currentAddress : 'Mi ubicación actual'
+                  currentAddress ? currentAddress : 'Mi ubicación actual'
                 }
                 onLocationInputPress={() =>
                   navigation.navigate('ChooseStartingLocationScreen')
@@ -318,7 +338,7 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
             </Div>
 
             <Button
-              disabled={isInRide || isInPendingRide}
+              disabled={disabledToRequestRide}
               justifyContent="center"
               alignItems="center"
               alignSelf="center"
@@ -329,30 +349,7 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
               h={50}
               mt="lg"
               rounded="lg"
-              onPress={() => {
-                socket?.emit('REQUEST_RIDE', {
-                  passengerId: myProfile?.user.id,
-                  from: {
-                    address: currentAddress,
-                    location: {
-                      latitude: userLocation.latitude,
-                      longitude: userLocation.longitude,
-                    },
-                  },
-                  to: {
-                    address: currentAddress,
-                    location: {
-                      latitude: userLocation.latitude,
-                      longitude: userLocation.longitude,
-                    },
-                  },
-                  passengersQuantity: passengersCount,
-                  ridePrice: price,
-                });
-                // navigation.navigate('MeetYourDriverScreen', {
-                //   id: '123',
-                // })
-              }}>
+              onPress={sendRequestRide}>
               Solicitar Mototaxi
             </Button>
           </Div>

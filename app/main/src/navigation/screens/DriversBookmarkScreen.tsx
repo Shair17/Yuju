@@ -41,7 +41,7 @@ export const DriversBookmarkScreen: React.FC<Props> = () => {
           h={150}
         />
         <Text mt="xl" textAlign="center" fontSize="4xl" fontWeight="bold">
-          Aún no tienes chóferes guardados
+          Aún no tienes mototaxistas guardados
         </Text>
       </Div>
     );
@@ -49,7 +49,7 @@ export const DriversBookmarkScreen: React.FC<Props> = () => {
 
   return (
     <FlashList
-      estimatedItemSize={20}
+      estimatedItemSize={50}
       data={myDrivers}
       renderItem={({item: {id, profile, rating, createdAt, updatedAt}}) => {
         return (

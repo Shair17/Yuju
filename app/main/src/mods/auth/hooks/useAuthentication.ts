@@ -51,7 +51,7 @@ export const useAuthentication = () => {
       } else {
         const user = await AccessToken.getCurrentAccessToken();
 
-        if (!!user) {
+        if (user) {
           const {accessToken, userID} = user;
 
           executeLogInWithFacebook({
@@ -117,7 +117,6 @@ export const useAuthentication = () => {
         }
       }
     } catch (error) {
-      console.log(error);
       Notifier.showNotification({
         title: 'Error',
         description: 'Ocurrió un error al conectarse a la SDK de Facebook.',

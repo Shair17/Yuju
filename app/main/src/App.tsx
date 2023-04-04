@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {AppState, StatusBar, AppStateStatus} from 'react-native';
+import {AppState, StatusBar, type AppStateStatus} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import NetInfo, {useNetInfo} from '@react-native-community/netinfo';
 import RNBootSplash from 'react-native-bootsplash';
@@ -17,6 +17,7 @@ import {SocketProvider} from './mods/socket/SocketProvider';
 import {enableLatestRenderer} from 'react-native-maps';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import mobileAds from 'react-native-google-mobile-ads';
+import {globalStyles} from './styles/globals';
 
 mobileAds().initialize();
 
@@ -40,20 +41,22 @@ const App: React.FC = () => {
   }, [themeName]);
 
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureHandlerRootView style={globalStyles.container}>
       <SWRConfig
         value={{
-          isPaused() {
-            return appState !== 'active';
-          },
+          // isPaused() {
+          //   return appState !== 'active';
+          // },
           provider: () => new Map(),
           isOnline() {
-            return !!netInfo.isConnected;
+            if (netInfo.isConnected == null) return false;
+
+            return netInfo.isConnected;
           },
           isVisible() {
-            return appState === 'active' || appState === 'background';
+            return appState === 'active';
           },
-          initFocus(callback) {
+          initFocus(callback: () => void) {
             let appState = AppState.currentState;
 
             const onAppStateChange = (nextAppState: AppStateStatus) => {
@@ -76,16 +79,18 @@ const App: React.FC = () => {
             };
           },
           initReconnect(callback) {
-            if (netInfo.isConnected === null) return;
+            if (netInfo.isConnected == null) {
+              return;
+            }
 
-            let isOnline = !!netInfo.isConnected;
+            let isOnline = netInfo.isConnected;
 
             if (isOnline) {
               callback();
             }
 
             const unsubscribe = NetInfo.addEventListener(nextState => {
-              if (!!nextState.isConnected) {
+              if (nextState.isConnected) {
                 callback();
               }
 

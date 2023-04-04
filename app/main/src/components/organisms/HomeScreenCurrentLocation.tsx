@@ -12,6 +12,7 @@ import {GetMyProfile} from '../../types/app';
 import {wait} from '@yuju/common/utils/time';
 import {useDimensions} from '@yuju/global-hooks/useDimensions';
 import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {globalStyles} from '@yuju/styles/globals';
 
 export const HomeScreenCurrentLocation: React.FC = () => {
   const [currentAddress, setCurrentAddress] = useState<string | null>(null);
@@ -144,7 +145,7 @@ export const HomeScreenCurrentLocation: React.FC = () => {
             bounce
             onPress={handleCopyMyCurrentAddressToClipboard}>
             <Text color="primary500" fontSize="md" fontWeight="500">
-              {!!currentAddress ? currentAddress : 'Cargando...'}
+              {currentAddress ? currentAddress : 'Cargando...'}
             </Text>
           </TextTicker>
         </Div>
@@ -162,7 +163,7 @@ export const HomeScreenCurrentLocation: React.FC = () => {
             <MapView
               followsUserLocation
               ref={el => (mapRef.current = el!)}
-              style={{flex: 1}}
+              style={globalStyles.container}
               provider={PROVIDER_GOOGLE}
               showsUserLocation
               initialRegion={{
