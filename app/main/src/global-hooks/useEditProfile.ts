@@ -7,29 +7,19 @@ import {
   launchImageLibrary,
 } from 'react-native-image-picker';
 import {DropdownRef} from 'react-native-magnus';
-import {Notifier, NotifierComponents} from 'react-native-notifier';
 import {zodResolver} from '@hookform/resolvers/zod';
-import {DNI_REGEX} from '@yuju/common/regex';
 import {GetMyProfile} from '@yuju/types/app';
-import {z} from 'zod';
 import {useRequest} from './useRequest';
-
-type FormDataValues = {
-  email: string;
-  dni: string;
-  phone: string;
-};
-
-export const schemaValidator = z.object({
-  email: z.string().email({message: 'Correo electrónico inválido'}),
-  dni: z.string().min(8).max(8).regex(DNI_REGEX, {message: 'DNI inválido'}),
-  phone: z.string().min(9).max(9, {message: 'Número de celular inválido'}),
-});
+import {showAlert, showNotification} from '@yuju/common/utils/notification';
+import {
+  EditProfileFormDataValues,
+  EditProfileSchemaValidator,
+} from '@yuju/common/schemas/edit-profile.schema';
 
 const avatarPlaceholderImage = require('@yuju/assets/images/avatar-placeholder.jpg');
 
 interface Props {
-  formDefaultValues?: Partial<FormDataValues>;
+  formDefaultValues?: Partial<EditProfileFormDataValues>;
 }
 
 export const useEditProfile = ({formDefaultValues}: Props = {}) => {
@@ -45,8 +35,8 @@ export const useEditProfile = ({formDefaultValues}: Props = {}) => {
     url: '/users/me',
   });
   const {control, handleSubmit, formState, watch, setError} =
-    useForm<FormDataValues>({
-      resolver: zodResolver(schemaValidator),
+    useForm<EditProfileFormDataValues>({
+      resolver: zodResolver(EditProfileSchemaValidator),
       defaultValues: formDefaultValues,
     });
 
@@ -88,14 +78,14 @@ export const useEditProfile = ({formDefaultValues}: Props = {}) => {
 
         setAvatar(photo);
       } else {
-        Notifier.showNotification({
+        showNotification({
           title: 'Yuju',
           description:
             'Los permisos a la camara fueron denegados por ti, por favor acepta los permisos.',
         });
       }
     } catch (err) {
-      Notifier.showNotification({
+      showNotification({
         title: 'Yuju',
         description: 'Ocurrió un error inesperado solicitando los permisos',
       });
@@ -141,20 +131,17 @@ export const useEditProfile = ({formDefaultValues}: Props = {}) => {
   };
 
   const handleChangeNameInfo = () => {
-    Notifier.showNotification({
+    showAlert({
       title: 'Advertencia',
       description: 'No puedes editar tu nombre.',
-      Component: NotifierComponents.Alert,
-      componentProps: {
-        alertType: 'warn',
-      },
+      alertType: 'warn',
     });
   };
 
   const handleShowSaveInfo = (
     message: string = 'Tus cambios fueron guardados.',
   ) => {
-    Notifier.showNotification({
+    showNotification({
       title: 'Yuju',
       description: message,
     });

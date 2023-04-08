@@ -1,10 +1,14 @@
 import {Inject, Service} from 'fastify-decorators';
 import {UserService} from '../user/user.service';
+import {DriverService} from '../driver/driver.service';
 import {
   LogInUserWithFacebookBodyType,
   RefreshUserFacebookTokenBodyType,
 } from './schemas/auth-user-facebook.body';
-import {LogInDriverWithFacebookBodyType} from './schemas/auth-driver-facebook.body';
+import {
+  LogInDriverWithFacebookBodyType,
+  RefreshDriverFacebookTokenBodyType,
+} from './schemas/auth-driver-facebook.body';
 import {FacebookService} from '../../shared/facebook/facebook.service';
 import {LogInUserWithFacebookResponseType} from './schemas/auth-user-facebook.response';
 import {LogInDriverWithFacebookResponseType} from './schemas/auth-driver-facebook.response';
@@ -20,6 +24,9 @@ export class AuthService {
 
   @Inject(UserService)
   private readonly userService: UserService;
+
+  @Inject(DriverService)
+  private readonly driverService: DriverService;
 
   @Inject(FacebookService)
   private readonly facebookService: FacebookService;
@@ -96,11 +103,20 @@ export class AuthService {
       };
     }
 
+    if (
+      user.availability.isBanned &&
+      user.availability.bannedUntil &&
+      new Date(user.availability.bannedUntil) < new Date()
+    ) {
+      await this.userService.removeBanned(user.id);
+      user.availability.isBanned = false;
+    }
+
     if (user.availability.isBanned) {
       console.log(
         `User with id ${user.id} banned with reason ${user.availability.banReason}`,
       );
-      throw new Unauthorized(`USER_BANNED`);
+      throw new Unauthorized('USER_BANNED');
     }
 
     const payload: AuthTokenPayload = {
@@ -183,18 +199,164 @@ export class AuthService {
   async logInDriverWithFacebook(
     data: LogInDriverWithFacebookBodyType,
   ): Promise<LogInDriverWithFacebookResponseType> {
+    let [facebookId, name] = ['', ''];
+
+    const [facebookAccessToken, facebookUserID] = trimStrings(
+      data.accessToken,
+      data.userID,
+    );
+
+    try {
+      const facebookApiResponse = await this.facebookService.verifyUser({
+        accessToken: facebookAccessToken,
+        userID: facebookUserID,
+      });
+
+      [facebookId, name] = [facebookApiResponse.id, facebookApiResponse.name];
+    } catch (error) {
+      throw new BadRequest(`INVALID_DATA`);
+    }
+
+    if (facebookUserID !== facebookId) {
+      throw new Unauthorized();
+    }
+
+    const driver = await this.driverService.findByFacebookId(facebookId);
+    const driverExists = !!driver;
+
+    // Create driver...
+    if (!driverExists) {
+      const createdDriver = await this.driverService.createDriver({
+        facebookAccessToken,
+        facebookId,
+        name,
+      });
+
+      const payload: AuthTokenPayload = {
+        id: createdDriver.id,
+        facebookId: createdDriver.facebookId,
+        name: createdDriver.profile.name,
+        dni: createdDriver.profile.dni,
+        email: createdDriver.profile.email,
+        phoneNumber: createdDriver.profile.phoneNumber,
+        avatar: createdDriver.profile.avatar,
+        isAdmin: createdDriver.isAdmin,
+      };
+
+      const {accessToken, refreshToken} = this.tokenService.generateTokens(
+        'driver',
+        payload,
+      );
+
+      try {
+        await this.driverService.updateTokens(createdDriver.id, {
+          accessToken,
+          refreshToken,
+        });
+      } catch (error) {
+        throw new InternalServerError();
+      }
+
+      const isNew = await this.driverService.isNew(createdDriver.id);
+
+      return {
+        accessToken,
+        refreshToken,
+        isNew,
+      };
+    }
+
+    if (
+      driver.availability.isBanned &&
+      driver.availability.bannedUntil &&
+      new Date(driver.availability.bannedUntil) < new Date()
+    ) {
+      await this.driverService.removeBanned(driver.id);
+      driver.availability.isBanned = false;
+    }
+
+    if (driver.availability.isBanned) {
+      console.log(
+        `Driver with id ${driver.id} banned with reason ${driver.availability.banReason}`,
+      );
+      throw new Unauthorized('DRIVER_BANNED');
+    }
+
+    const payload: AuthTokenPayload = {
+      id: driver.id,
+      facebookId: driver.facebookId,
+      name: driver.profile.name,
+      dni: driver.profile.dni,
+      email: driver.profile.email,
+      phoneNumber: driver.profile.phoneNumber,
+      avatar: driver.profile.avatar,
+      isAdmin: driver.isAdmin,
+    };
+
+    const {accessToken, refreshToken} = this.tokenService.generateTokens(
+      'driver',
+      payload,
+    );
+
+    try {
+      await this.driverService.updateTokens(driver.id, {
+        accessToken,
+        refreshToken,
+      });
+    } catch (error) {
+      throw new InternalServerError();
+    }
+
+    const isNew = await this.driverService.isNew(driver.id);
+
     return {
-      accessToken: '',
-      refreshToken: '',
-      isNew: false,
+      accessToken,
+      refreshToken,
+      isNew,
     };
   }
 
-  async refreshDriverFacebookToken(data: any) {
-    return {};
+  async refreshDriverFacebookToken(data: RefreshDriverFacebookTokenBodyType) {
+    const decoded = this.tokenService.verifyRefreshToken(
+      'driver',
+      data.refreshToken,
+    );
+    const driver = await this.driverService.findByIdOrThrow(decoded.id);
+
+    const payload: AuthTokenPayload = {
+      id: driver.id,
+      facebookId: driver.facebookId,
+      name: driver.profile.name,
+      dni: driver.profile.dni,
+      email: driver.profile.email,
+      phoneNumber: driver.profile.phoneNumber,
+      avatar: driver.profile.avatar,
+      isAdmin: driver.isAdmin,
+    };
+
+    const accessToken = this.tokenService.generateAccessToken(
+      'driver',
+      payload,
+    );
+
+    return {
+      accessToken,
+      refreshToken: data.refreshToken,
+    };
   }
 
   async logOutDriverFromFacebook(id: string) {
-    return {};
+    const driver = await this.driverService.findByIdOrThrow(id);
+
+    try {
+      await this.driverService.updateRefreshToken(driver.id, null);
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerError();
+    }
+
+    return {
+      success: true,
+    };
   }
 }

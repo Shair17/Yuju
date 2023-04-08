@@ -27,7 +27,7 @@ interface Props
 export const MyReferralsScreen: React.FC<Props> = ({navigation}) => {
   const {isLoading, data: myReferrals} = useRequest<GetReferralsResponse>({
     method: 'GET',
-    url: '/users/me/referrals',
+    url: '/referrals/user',
   });
   const hasReferrals = myReferrals?.referrals.length !== 0;
 

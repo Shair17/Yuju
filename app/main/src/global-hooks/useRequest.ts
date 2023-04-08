@@ -33,6 +33,7 @@ export function useRequest<Data = unknown, Error = unknown>(
     isValidating,
     mutate,
     isLoading,
+    // @ts-ignore
   } = useSWR<AxiosResponse<Data>, AxiosError<Error>>(
     request ? JSON.stringify(request) : null,
     /**

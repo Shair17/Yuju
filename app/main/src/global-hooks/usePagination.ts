@@ -51,7 +51,7 @@ export const usePagination = <T extends {id: string}>({
   }, [page, data]);
 
   return {
-    isLoading: isLoading || !data,
+    isLoading,
     myData,
     handleAddMoreItems,
   };

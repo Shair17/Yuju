@@ -7,11 +7,11 @@ export const useIsNew = (): boolean => {
   const isAuthenticated = useIsAuthenticated();
   const isNew = useAuthStore(s => s.isNew);
   const setIsNew = useAuthStore(s => s.setIsNew);
-  const {data: IamNewUser, isError} = useRequest<boolean>(
+  const {data: IamNewUser} = useRequest<boolean>(
     isAuthenticated
       ? {
           method: 'GET',
-          url: '/users/me/is-new',
+          url: '/users/im-new',
         }
       : null,
   );

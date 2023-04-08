@@ -1,7 +1,7 @@
+import {useEffect, useState} from 'react';
 import {isValidToken} from '@yuju/common/utils/token';
 import {useAuthStore} from '@yuju/global-stores/useAuthStore';
 import {isTokenExpired} from '@yuju/services/refresh-token';
-import {useEffect, useState} from 'react';
 
 export const useIsAuthenticated = (): boolean => {
   const accessToken = useAuthStore(r => r.accessToken);

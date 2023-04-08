@@ -36,8 +36,11 @@ model Profile {
 model Availability {
   id String @id @default(cuid())
 
-  isBanned  Boolean @default(false) @map("is_banned")
-  banReason String? @map("ban_reason")
+  isBanned    Boolean   @default(false) @map("is_banned")
+  banReason   String?   @map("ban_reason")
+  bannedUntil DateTime? @map("banned_until")
+
+  activationDate DateTime? @map("activation_date")
 
   users   User[]
   drivers Driver[]
@@ -85,6 +88,25 @@ model User {
   @@map("users")
 }
 
+model Vehicle {
+  id String @id @default(cuid())
+
+  photos String[]
+
+  license         String?
+  propertyCard    String? @map("property_card")
+  circulationCard String? @map("circulation_card")
+  technicalReview String? @map("technical_review")
+  soat            String?
+
+  driver Driver[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("vehicles")
+}
+
 model Driver {
   id String @id @default(cuid())
 
@@ -100,7 +122,15 @@ model Driver {
   accessToken  String? @map("access_token") @db.VarChar(1024)
   refreshToken String? @map("refresh_token") @db.VarChar(1024)
 
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+  summary String?
+
   isAdmin Boolean @default(false) @map("is_admin")
+
+  referralCode    String   @unique @map("referral_code")
+  referredBy      Driver?  @relation("ReferredBy", fields: [referredById], references: [id])
+  referredById    String?
+  referredDrivers Driver[] @relation("ReferredBy")
 
   trips   Trip[]
   ratings Rating[]
@@ -112,15 +142,9 @@ model Driver {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  vehicleId String
 
   @@map("drivers")
-}
-
-enum PaymentType {
-  Yape
-  Plin
-  Cash
-  Other
 }
 
 enum LocationTag {
@@ -167,6 +191,14 @@ enum TripStatus {
   Cancelled
 }
 
+// No especifico que será para el trip solamente, esto lo puedo usar para otros modelos
+enum PaymentType {
+  Yape
+  Plin
+  Cash
+  Other
+}
+
 model Trip {
   id String @id @default(cuid())
 
@@ -178,7 +210,11 @@ model Trip {
   to     Location @relation("to", fields: [toId], references: [id])
   toId   String
 
+  message String?
+
   status TripStatus @default(Pending)
+
+  paymentType PaymentType @default(Cash)
 
   driver   Driver? @relation(fields: [driverId], references: [id])
   driverId String?

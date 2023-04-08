@@ -32,6 +32,10 @@ export type Availability = {
   banReason?: string;
   createdAt: string;
   updatedAt: string;
+  // This is Date type
+  activationDate?: string;
+  // This is Date type
+  bannedUntil?: string;
 };
 
 export interface GetMyProfile {

@@ -23,7 +23,7 @@ import {
   YUJU_WHATSAPP,
 } from '@yuju/common/constants/support';
 import {Vibration, StatusBar} from 'react-native';
-import {Notifier} from 'react-native-notifier';
+import {showNotification} from '@yuju/common/utils/notification';
 
 interface Props
   extends NativeStackScreenProps<ProfileStackParams, 'AskHelpScreen'> {}
@@ -41,7 +41,7 @@ export const AskHelpScreen: React.FC<Props> = () => {
 
     Vibration.vibrate(15);
 
-    Notifier.showNotification({
+    showNotification({
       title: 'Portapapeles',
       description: 'Tu dirección ha sido copiado al portapapeles.',
       hideOnPress: true,

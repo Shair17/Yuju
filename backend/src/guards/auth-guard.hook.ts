@@ -9,10 +9,11 @@ import {isString} from '../common/utils/string';
 import {isCuid} from '../common/helpers/cuid';
 import jwt from 'jsonwebtoken';
 import {AuthTokenPayload} from '../interfaces/tokens';
+import {ConfigService} from '../config/config.service';
 
-// Json Web Token Secrets
-const JWT_USER_SECRET = process.env.JWT_USER_SECRET!;
-const JWT_DRIVER_SECRET = process.env.JWT_DEALER_SECRET!;
+// Json Web Token Secrets fallbacks
+const FALLBACK_JWT_USER_SECRET = process.env.JWT_USER_SECRET!;
+const FALLBACK_JWT_DRIVER_SECRET = process.env.JWT_DEALER_SECRET!;
 
 const verifyToken = (token: string) => {
   if (!token) {
@@ -44,6 +45,11 @@ const getUserFromToken = (token: string): AuthTokenPayload | null => {
   }
 
   try {
+    const configService =
+      getInstanceByToken<ConfigService>('ConfigServiceToken');
+    const JWT_USER_SECRET =
+      configService.get<string>('JWT_USER_SECRET') ?? FALLBACK_JWT_USER_SECRET;
+
     const userDecoded = <AuthTokenPayload>jwt.verify(token, JWT_USER_SECRET);
     return userDecoded ?? null;
   } catch (error) {
@@ -57,6 +63,12 @@ const getDriverFromToken = (token: string): AuthTokenPayload | null => {
   }
 
   try {
+    const configService =
+      getInstanceByToken<ConfigService>('ConfigServiceToken');
+    const JWT_DRIVER_SECRET =
+      configService.get<string>('JWT_DRIVER_SECRET') ??
+      FALLBACK_JWT_DRIVER_SECRET;
+
     const dealerDecoded = <AuthTokenPayload>(
       jwt.verify(token, JWT_DRIVER_SECRET)
     );
@@ -106,8 +118,9 @@ export const userIsAuthenticated: onRequestHookHandler = async (
   request,
   reply,
 ) => {
-  const parts = <[string, string]>request.headers.authorization?.split(' ');
-  const [, token] = parts;
+  const [schema, token] = <[string, string]>(
+    request.headers.authorization?.split(' ')
+  );
 
   if (!verifyToken(token)) {
     throw new Unauthorized(`INVALID_TOKEN`);
@@ -125,6 +138,15 @@ export const userIsAuthenticated: onRequestHookHandler = async (
 
   const userService = getInstanceByToken<UserService>('UserServiceToken');
   const user = await userService.findByIdOrThrow(userFromToken.id);
+
+  if (
+    user.availability.isBanned &&
+    user.availability.bannedUntil &&
+    new Date(user.availability.bannedUntil) < new Date()
+  ) {
+    await userService.removeBanned(user.id);
+    user.availability.isBanned = false;
+  }
 
   if (user.availability.isBanned) {
     throw new Unauthorized('USER_BANNED');
@@ -164,11 +186,20 @@ export const driverIsAuthenticated: onRequestHookHandler = async (
     throw new Unauthorized(`INVALID_TOKEN`);
   }
 
-  const dealerService = getInstanceByToken<DriverService>('DealerServiceToken');
-  const driver = await dealerService.findByIdOrThrow(driverFromToken.id);
+  const driverService = getInstanceByToken<DriverService>('DriverServiceToken');
+  const driver = await driverService.findByIdOrThrow(driverFromToken.id);
+
+  if (
+    driver.availability.isBanned &&
+    driver.availability.bannedUntil &&
+    new Date(driver.availability.bannedUntil) < new Date()
+  ) {
+    await driverService.removeBanned(driver.id);
+    driver.availability.isBanned = false;
+  }
 
   if (driver.availability.isBanned) {
-    throw new Unauthorized('USER_BANNED');
+    throw new Unauthorized('DRIVER_BANNED');
   }
 
   request.driver = {

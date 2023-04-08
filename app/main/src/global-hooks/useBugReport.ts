@@ -1,23 +1,14 @@
 import {zodResolver} from '@hookform/resolvers/zod';
 import useAxios from 'axios-hooks';
-import z from 'zod';
 import {useForm} from 'react-hook-form';
 import {CreateBugReportBody, CreateBugReportResponse} from '@yuju/types/app';
-
-export const schemaValidator = z.object({
-  title: z.string(),
-  description: z.string(),
-  extra: z.optional(z.string()),
-});
-
-type FormDataValues = {
-  title: string;
-  description: string;
-  extra?: string;
-};
+import {
+  BugReportSchema,
+  BugReportFormDataValues,
+} from '@yuju/common/schemas/bug-report.schema';
 
 export const useBugReport = () => {
-  const [{loading: bugReportIsLoading}, executeCreateBugReport] = useAxios<
+  const [{loading}, executeCreateBugReport] = useAxios<
     CreateBugReportResponse,
     CreateBugReportBody
   >(
@@ -27,15 +18,15 @@ export const useBugReport = () => {
     },
     {manual: true},
   );
-  const {control, handleSubmit, formState} = useForm<FormDataValues>({
-    resolver: zodResolver(schemaValidator),
+  const {control, handleSubmit, formState} = useForm<BugReportFormDataValues>({
+    resolver: zodResolver(BugReportSchema),
   });
 
   return {
     control,
     handleSubmit,
     formState,
-    bugReportIsLoading,
+    bugReportIsLoading: loading,
     executeCreateBugReport,
   };
 };

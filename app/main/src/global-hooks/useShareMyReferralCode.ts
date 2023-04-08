@@ -15,11 +15,11 @@ export const useShareMyReferralCode = () => {
     isError,
   } = useRequest<GetReferralsResponse>({
     method: 'GET',
-    url: '/users/me/referrals',
+    url: '/referrals/user',
   });
 
-  const handleShareMyReferralCode =  () => {
-     Share.open({
+  const handleShareMyReferralCode = () => {
+    Share.open({
       title: 'Comparte Yuju con tus amigos!',
       message: `Hola, te invito a formar parte de Yuju, una mejor forma de transportarse. Descarga Yuju ahora desde aquí ${DOWNLOAD_APP_LINK}, recuerda ingresar mi código *${myReferrals?.code}* al momento de registrarte. Seguridad, confianza y rapidez con Yuju.`,
     });

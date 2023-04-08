@@ -1,0 +1,14 @@
+import {Type, Static} from '@sinclair/typebox';
+import {CUID_REGEX} from '../../../common/regex/index';
+
+export const GetDriverIsBannedParams = Type.Object(
+  {
+    userId: Type.RegEx(CUID_REGEX),
+  },
+  {
+    additionalProperties: false,
+  },
+);
+export type GetDriverIsBannedParamsType = Static<
+  typeof GetDriverIsBannedParams
+>;

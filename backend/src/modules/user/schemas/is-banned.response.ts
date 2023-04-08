@@ -1,6 +1,6 @@
 import {Type, Static} from '@sinclair/typebox';
 
-export const GetIsBannedResponse = Type.Object(
+export const GetUserIsBannedResponse = Type.Object(
   {
     isBanned: Type.Boolean(),
     banReason: Type.Union([Type.Null(), Type.String()]),
@@ -10,4 +10,6 @@ export const GetIsBannedResponse = Type.Object(
     additionalProperties: false,
   },
 );
-export type GetIsBannedResponseType = Static<typeof GetIsBannedResponse>;
+export type GetUserIsBannedResponseType = Static<
+  typeof GetUserIsBannedResponse
+>;

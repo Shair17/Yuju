@@ -60,7 +60,7 @@ export const AskReferralCodeScreen: React.FC<Props> = ({navigation}) => {
     !!referralCode && referralCode.length === 6
       ? {
           method: 'GET',
-          url: `/users/referrals/${referralCode}`,
+          url: `/referrals/user/${referralCode}`,
         }
       : null,
   );

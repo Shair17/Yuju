@@ -138,7 +138,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       }
 
       this.loggerService.info(
-        `Queue Service has been finished, loaded ${trips.length} trips.`,
+        `Queue Service has been finished, loaded ${trips.length} ${trips.length > 1 ? 'trips' : 'trip'}.`,
       );
     } else {
       this.loggerService.info(

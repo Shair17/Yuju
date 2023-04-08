@@ -8,16 +8,12 @@ import {
   userIsAuthenticated,
 } from '../../guards/auth-guard.hook';
 import {
-  GetUserFromReferralCodeParams,
-  GetUserFromReferralCodeParamsType,
-} from './schemas/referral-code.params';
-import {
   GetUserIsBannedParams,
   GetUserIsBannedParamsType,
 } from './schemas/is-banned.params';
 import {
-  GetIsBannedResponse,
-  GetIsBannedResponseType,
+  GetUserIsBannedResponse,
+  GetUserIsBannedResponseType,
 } from './schemas/is-banned.response';
 import {
   GetUserMyDriversQuery,
@@ -120,43 +116,25 @@ export class UserController {
     return this.userService.count();
   }
 
-  @GET('/referrals/:code', {
-    schema: {
-      params: GetUserFromReferralCodeParams,
-    },
-    onRequest: [hasBearerToken, userIsAuthenticated],
-  })
-  async getUserFromReferralCode(
-    request: Request<{
-      Params: GetUserFromReferralCodeParamsType;
-    }>,
-    reply: Reply,
-  ) {
-    return this.userService.getUserFromReferralCode(
-      request.user?.id!,
-      request.params.code,
-    );
-  }
-
   @GET('/:userId/is-banned', {
     schema: {
       params: GetUserIsBannedParams,
       response: {
-        '2xx': GetIsBannedResponse,
+        '2xx': GetUserIsBannedResponse,
       },
     },
   })
   async getIsBanned(
     request: Request<{
       Params: GetUserIsBannedParamsType;
-      Reply: GetIsBannedResponseType;
+      Reply: GetUserIsBannedResponseType;
     }>,
     reply: Reply,
   ) {
     return this.userService.isBanned(request.params.userId);
   }
 
-  @GET('/me/is-new', {
+  @GET('/im-new', {
     onRequest: [hasBearerToken, userIsAuthenticated],
   })
   async getIsNew(request: Request, reply: Reply) {
@@ -200,12 +178,5 @@ export class UserController {
     reply: Reply,
   ) {
     return this.userService.updateMe(request.user?.id!, request.body);
-  }
-
-  @GET('/me/referrals', {
-    onRequest: [hasBearerToken, userIsAuthenticated],
-  })
-  async getReferrals(request: Request, reply: Reply) {
-    return this.userService.getReferrals(request.user?.id!);
   }
 }

@@ -24,7 +24,7 @@ export const useLocation = () => {
     useState<ILocation>(defaultUserLocation);
 
   const watchId = useRef<number>();
-  const isMounted = useRef(true);
+  const isMounted = useRef<boolean>(false);
 
   useEffect(() => {
     isMounted.current = true;

@@ -1,6 +1,5 @@
 import {useState} from 'react';
 import useAxios from 'axios-hooks';
-import z from 'zod';
 import {
   CreateAddressBody,
   CreateAddressResponse,
@@ -9,18 +8,14 @@ import {
   TagType,
 } from '@yuju/types/app';
 import {useForm} from 'react-hook-form';
-import {LocationInformationType} from '@yuju/navigation/screens/AddAddressesBookmarkScreen';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {useRequest} from './useRequest';
 import {useMyAddressesReachedLimit} from './useMyAddressesReachedLimit';
 import {MAX_ADDRESSES_PER_USER} from '@yuju/common/constants/app';
-
-export const LocationInformationSchema = z.object({
-  name: z.string(),
-  address: z.string(),
-  zip: z.string(),
-  city: z.string(),
-});
+import {
+  LocationInformationSchema,
+  LocationInformationType,
+} from '@yuju/common/schemas/location-information.schema';
 
 export const useAddAddress = () => {
   const [showTagError, setTagError] = useState(false);

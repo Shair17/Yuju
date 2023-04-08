@@ -8,7 +8,7 @@ import {
 import {Server, Socket} from 'socket.io';
 import {OnModuleInit} from '../../interfaces/module';
 import {LoggerService} from '../../common/logger/logger.service';
-import {QueueService, InRide} from './queue.service';
+import {QueueService, InRide, InRidePending} from './queue.service';
 import {JwtService, JwtPayload} from '../../shared/tokens/jwt.service';
 import {isValidToken} from '../../common/helpers/token';
 import {isString} from '../../common/utils/string';
@@ -16,6 +16,7 @@ import {ConfigService} from '../../config/config.service';
 import {AuthTokenPayload} from '../../interfaces/tokens';
 import {DatabaseService} from '../../database/database.service';
 import {TripStatus} from '@prisma/client';
+import {CitieService} from '../cities/citie.service';
 
 export interface ILocation {
   latitude: number;
@@ -53,6 +54,9 @@ export class RealTimeService implements OnModuleInit {
 
   @Inject(DatabaseService)
   private readonly databaseService: DatabaseService;
+
+  @Inject(CitieService)
+  private readonly citieService: CitieService;
 
   // @Inject(UserService)
   // private readonly userService: UserService;
@@ -202,6 +206,11 @@ export class RealTimeService implements OnModuleInit {
         ...user,
         location: userLocation,
       });
+
+      socket.emit(
+        'ALLOWED_TO_USE_APP',
+        this.citieService.isInAllowedCities(userLocation),
+      );
     });
 
     // El pasajero (usuario) solicitó una carrera
@@ -276,6 +285,8 @@ export class RealTimeService implements OnModuleInit {
         // Obtener el chofer más cercano
         const closestDriver = this.queueService.getClosestDriver(from.location);
 
+        console.log({closestDriver});
+
         if (!closestDriver) {
           // No se encontró chofer cercano entonces emitir a todos los choferes de las carreras pendientes
           this.client
@@ -333,7 +344,51 @@ export class RealTimeService implements OnModuleInit {
           },
         });
 
+        socket.emit(
+          'PASSENGER_IN_RIDE_PENDING',
+          this.queueService.userIsInRidePending(user.id),
+        );
+
+        socket.emit(
+          'PASSENGER_IN_RIDE',
+          this.queueService.userIsInRide(user.id),
+        );
+
         this.client.of('/drivers').to(data.driver.id).emit('CANCEL_RIDE', data);
+      },
+    );
+
+    socket.on(
+      'CANCEL_RIDE_PENDING',
+      async (data: {
+        id: InRidePending['id'];
+        passenger: {id: InRidePending['user']['id']};
+      }) => {
+        if (!this.queueService.userExistsInRidePending(data.passenger.id))
+          return;
+
+        this.queueService.deleteFromInRidePendingQueue(data.id);
+
+        await this.databaseService.trip.update({
+          where: {
+            id: data.id,
+          },
+          data: {
+            status: TripStatus.Cancelled,
+          },
+        });
+
+        this.client
+          .of('/users')
+          .to(data.passenger.id)
+          .emit('PASSENGER_IN_RIDE', this.queueService.userIsInRide(user.id));
+        this.client
+          .of('/users')
+          .to(data.passenger.id)
+          .emit(
+            'PASSENGER_IN_RIDE_PENDING',
+            this.queueService.userIsInRidePending(user.id),
+          );
       },
     );
 
@@ -378,6 +433,20 @@ export class RealTimeService implements OnModuleInit {
         this.queueService.driverIsInRide(driver.id),
       );
     }
+
+    // Ubicación del chofer en tiempo real
+    socket.on('DRIVER_LOCATION', (driverLocation: ILocation) => {
+      // Actualizamos en la cola de pasajeros (usuarios)
+      this.queueService.editDriversQueue({
+        ...driver,
+        location: driverLocation,
+      });
+
+      socket.emit(
+        'ALLOWED_TO_USE_APP',
+        this.citieService.isInAllowedCities(driverLocation),
+      );
+    });
 
     socket.on('RIDE_REQUEST', async (data: IRequestRide) => {
       if (this.queueService.driverExistsInRide(driver.id)) {
@@ -427,6 +496,11 @@ export class RealTimeService implements OnModuleInit {
           },
         });
 
+        socket.emit(
+          'DRIVER_IN_RIDE',
+          this.queueService.driverIsInRide(driver.id),
+        );
+
         this.client
           .of('/users')
           .to(data.passenger.id)
@@ -446,6 +520,8 @@ export class RealTimeService implements OnModuleInit {
   private async adminsEvents(socket: Socket) {
     // @ts-ignore
     const admin = <UserFromMiddleware>socket.admin;
+
+    socket.join(admin.id);
 
     socket.on('disconnect', async reason => {});
   }

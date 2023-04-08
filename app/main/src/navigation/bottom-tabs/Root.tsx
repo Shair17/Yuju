@@ -1,10 +1,10 @@
 import React from 'react';
-import {Icon, Avatar, Skeleton, Div} from 'react-native-magnus';
+import {Icon, Avatar, Skeleton} from 'react-native-magnus';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import * as Animatable from 'react-native-animatable';
 import {HomeStackScreen} from './HomeStackScreen';
-import {RequestStackScreen} from '../bottom-tabs/RequestStackScreen';
-import {ProfileStackScreen} from '../bottom-tabs/ProfileStackScreen';
+import {RequestStackScreen} from './RequestStackScreen';
+import {ProfileStackScreen} from './ProfileStackScreen';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParams} from '../Root';
 import {useRequest} from '@yuju/global-hooks/useRequest';
@@ -22,11 +22,7 @@ interface Props
   extends NativeStackScreenProps<RootStackParams, 'Application'> {}
 
 export const Root: React.FC<Props> = () => {
-  const {
-    data: myProfile,
-    isLoading,
-    isValidating,
-  } = useRequest<GetMyProfile>({
+  const {data: myProfile, isLoading} = useRequest<GetMyProfile>({
     method: 'GET',
     url: '/users/me',
   });
@@ -93,7 +89,7 @@ export const Root: React.FC<Props> = () => {
               animation="zoomIn"
               easing="ease-in-out"
               duration={500}>
-              {isLoading || isValidating ? (
+              {isLoading ? (
                 <Skeleton.Circle w={26} h={26} bg="gray100" />
               ) : (
                 <Avatar

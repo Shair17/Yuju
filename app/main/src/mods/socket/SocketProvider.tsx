@@ -1,5 +1,4 @@
-import React, {Fragment, useEffect} from 'react';
-import {Notifier, NotifierComponents} from 'react-native-notifier';
+import React, {useEffect} from 'react';
 import {useAuthStore} from '@yuju/global-stores/useAuthStore';
 import {
   useSocketStore,
@@ -8,6 +7,7 @@ import {
 } from '@yuju/mods/socket/stores/useSocketStore';
 import {useIsNew} from '@yuju/global-hooks/useIsNew';
 import {useIsAuthenticated} from '@yuju/global-hooks/useIsAuthenticated';
+import {showAlert} from '@yuju/common/utils/notification';
 
 export const SocketProvider: React.FC<React.PropsWithChildren> = ({
   children,
@@ -20,6 +20,7 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({
   const setAvailableDrivers = useSocketStore(s => s.setAvailableDrivers);
   const setInRide = useSocketStore(s => s.setInRide);
   const setInRidePending = useSocketStore(s => s.setInRidePending);
+  const setAllowedToUseApp = useSocketStore(s => s.setAllowedToUseApp);
   const isNew = useIsNew();
 
   useEffect(() => {
@@ -47,12 +48,9 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({
         return;
       }
 
-      Notifier.showNotification({
+      showAlert({
         description: 'Conectado a Yuju',
-        Component: NotifierComponents.Alert,
-        componentProps: {
-          alertType: 'success',
-        },
+        alertType: 'success',
         duration: 1000,
       });
     });
@@ -70,12 +68,9 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({
         return;
       }
 
-      Notifier.showNotification({
-        description: 'Desconectado de Yuju, reconectando...',
-        Component: NotifierComponents.Alert,
-        componentProps: {
-          alertType: 'warn',
-        },
+      showAlert({
+        description: 'Desconectado de Yuju. Reconectando...',
+        alertType: 'warn',
         duration: 1000,
       });
     });
@@ -113,15 +108,22 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({
       inRidePending: SocketStoreValues['inRidePending'],
     ) => setInRidePending(inRidePending);
 
+    const allowedToUseAppListener = (
+      allowedToUseApp: SocketStoreValues['allowedToUseApp'],
+    ) => setAllowedToUseApp(allowedToUseApp);
+
     socket?.on('PASSENGER_IN_RIDE', inRideListener);
 
     socket?.on('PASSENGER_IN_RIDE_PENDING', inRidePendingListener);
 
+    socket?.on('ALLOWED_TO_USE_APP', allowedToUseAppListener);
+
     return () => {
       socket?.off('PASSENGER_IN_RIDE', inRideListener);
       socket?.off('PASSENGER_IN_RIDE_PENDING', inRidePendingListener);
+      socket?.off('ALLOWED_TO_USE_APP', allowedToUseAppListener);
     };
   }, [socket, isAuthenticated, isNew]);
 
-  return <Fragment>{children}</Fragment>;
+  return <>{children}</>;
 };

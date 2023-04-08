@@ -20,6 +20,8 @@ Table availabilities {
   id String [pk]
   isBanned Boolean [not null, default: false]
   banReason String
+  bannedUntil DateTime
+  activationDate DateTime
   users users [not null]
   drivers drivers [not null]
   createdAt DateTime [default: `now()`, not null]
@@ -50,6 +52,19 @@ Table users {
   updatedAt DateTime [not null]
 }
 
+Table vehicles {
+  id String [pk]
+  photos String[] [not null]
+  license String
+  propertyCard String
+  circulationCard String
+  technicalReview String
+  soat String
+  driver drivers [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
 Table drivers {
   id String [pk]
   facebookId String [unique, not null]
@@ -60,7 +75,13 @@ Table drivers {
   availabilityId String [not null]
   accessToken String
   refreshToken String
+  vehicle vehicles [not null]
+  summary String
   isAdmin Boolean [not null, default: false]
+  referralCode String [unique, not null]
+  referredBy drivers
+  referredById String
+  referredDrivers drivers [not null]
   trips trips [not null]
   ratings ratings [not null]
   bugReports bug_reports [not null]
@@ -68,6 +89,7 @@ Table drivers {
   userId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  vehicleId String [not null]
 }
 
 Table locations {
@@ -95,7 +117,9 @@ Table trips {
   fromId String [not null]
   to locations [not null]
   toId String [not null]
+  message String
   status TripStatus [not null, default: 'Pending']
+  paymentType PaymentType [not null, default: 'Cash']
   driver drivers
   driverId String
   user users [not null]
@@ -134,13 +158,6 @@ Table bug_reports {
   updatedAt DateTime [not null]
 }
 
-Enum PaymentType {
-  Yape
-  Plin
-  Cash
-  Other
-}
-
 Enum LocationTag {
   Casa
   Amigo
@@ -157,6 +174,13 @@ Enum TripStatus {
   Cancelled
 }
 
+Enum PaymentType {
+  Yape
+  Plin
+  Cash
+  Other
+}
+
 Ref: users.profileId > profiles.id
 
 Ref: users.availabilityId > availabilities.id
@@ -166,6 +190,10 @@ Ref: users.referredById - users.id
 Ref: drivers.profileId > profiles.id
 
 Ref: drivers.availabilityId > availabilities.id
+
+Ref: drivers.vehicleId > vehicles.id
+
+Ref: drivers.referredById - drivers.id
 
 Ref: drivers.userId > users.id
 

@@ -8,12 +8,14 @@ import {QrCodeScreen} from '../screens/QrCodeScreen';
 import {MeetYourDriverScreen} from '../screens/MeetYourDriverScreen';
 import {ChooseStartingLocationScreen} from '../screens/ChooseStartingLocationScreen';
 import {ChooseDestinationLocationScreen} from '../screens/ChooseDestinationLocationScreen';
+import {WriteTripMessageScreen} from '../screens/WriteTripMessageScreen';
 
 export type RequestStackParams = {
   RequestScreen: undefined;
   ChooseStartingLocationScreen: undefined;
   ChooseDestinationLocationScreen: undefined;
   QrCodeScreen: undefined;
+  WriteTripMessageScreen: undefined;
   MeetYourDriverScreen: {
     id: string;
   };
@@ -69,12 +71,22 @@ export const RequestStackScreen: React.FC<Props> = () => {
       />
 
       <RequestStack.Screen
+        name="WriteTripMessageScreen"
+        component={WriteTripMessageScreen}
+        options={{
+          title: 'Escribe un Mensaje a tu Chófer',
+          animation: 'slide_from_bottom',
+        }}
+      />
+
+      <RequestStack.Screen
         name="MeetYourDriverScreen"
         component={MeetYourDriverScreen}
         options={{
           title: 'Conoce a tu Mototaxista',
         }}
       />
+
       <RequestStack.Screen
         name="QrCodeScreen"
         component={QrCodeScreen}

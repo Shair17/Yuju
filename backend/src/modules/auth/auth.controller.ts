@@ -10,6 +10,8 @@ import {
 import {
   LogInDriverWithFacebookBody,
   LogInDriverWithFacebookBodyType,
+  RefreshDriverFacebookTokenBody,
+  RefreshDriverFacebookTokenBodyType,
 } from './schemas/auth-driver-facebook.body';
 import {LogInUserWithFacebookResponse} from './schemas/auth-user-facebook.response';
 import {LogInDriverWithFacebookResponse} from './schemas/auth-driver-facebook.response';
@@ -81,8 +83,17 @@ export class AuthController {
     return this.authService.logInDriverWithFacebook(request.body);
   }
 
-  @POST('/driver/facebook/refresh')
-  async refreshDriverFacebookToken(request: Request, reply: Reply) {
+  @POST('/driver/facebook/refresh', {
+    schema: {
+      body: RefreshDriverFacebookTokenBody,
+    },
+  })
+  async refreshDriverFacebookToken(
+    request: Request<{
+      Body: RefreshDriverFacebookTokenBodyType;
+    }>,
+    reply: Reply,
+  ) {
     return this.authService.refreshDriverFacebookToken(request.body);
   }
 

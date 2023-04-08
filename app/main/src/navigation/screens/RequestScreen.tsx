@@ -1,7 +1,8 @@
-import React, {useRef, useMemo, useEffect, useCallback, useState} from 'react';
+import React, {useRef, useMemo, useEffect, useCallback} from 'react';
 import {StatusBar, StyleSheet} from 'react-native';
-import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
-import {Avatar, Button, Div, Icon} from 'react-native-magnus';
+import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
+import {MyMarker} from '@yuju/components/atoms/MyMarker';
+import {Avatar, Button, Div, Icon, Text} from 'react-native-magnus';
 import {defaultUserLocation, useLocation} from '@yuju/global-hooks/useLocation';
 import {ActivityIndicator} from '@yuju/components/atoms/ActivityIndicator';
 import {GPSAccessDenied} from '@yuju/components/molecules/GPSAccessDenied';
@@ -9,7 +10,10 @@ import {useRequest} from '@yuju/global-hooks/useRequest';
 import {GetMyProfile} from '@yuju/types/app';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RequestStackParams} from '../bottom-tabs/RequestStackScreen';
-import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
+import BottomSheet, {
+  BottomSheetScrollView,
+  BottomSheetView,
+} from '@gorhom/bottom-sheet';
 import {PulseActivityIndicator} from '@yuju/components/atoms/PulseActivityIndicator';
 import {useDimensions} from '@yuju/global-hooks/useDimensions';
 import NumericInput from 'react-native-numeric-input';
@@ -18,23 +22,30 @@ import {RequestScreenAskAddressesSeparator} from '@yuju/components/organisms/Req
 import {RequestScreenAskAddressItem} from '@yuju/components/organisms/RequestScreenAskAddressItem';
 import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
 import {globalStyles} from '@yuju/styles/globals';
+import {showNotification} from '@yuju/common/utils/notification';
+import {useTripStore} from '@yuju/global-stores/useTripStore';
+import {RequestScreenAskMessageItem} from '@yuju/components/organisms/RequestScreenAskMessageItem';
+import * as Animatable from 'react-native-animatable';
+import {openLink} from '@yuju/common/utils/link';
+import {SHAIR_INSTAGRAM} from '@yuju/common/constants/app';
 
 interface Props
   extends NativeStackScreenProps<RequestStackParams, 'RequestScreen'> {}
 
-export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
-  const [price, setPrice] = useState<number>(3);
-  const [passengersCount, setPassengersCount] = useState<number>(1);
-  const [currentAddress, setCurrentAddress] = useState<string | null>(null);
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['50%', '75%', '100%'], []);
-  const {
-    window: {width: windowWidth, height: windowHeight},
-  } = useDimensions();
-  const {data: myProfile} = useRequest<GetMyProfile>({
-    method: 'GET',
-    url: '/users/me',
-  });
+export const RequestScreen: React.FC<Props> = ({navigation}) => {
+  //# Trip State
+  const [price, setPrice] = useTripStore(s => [s.price, s.setPrice]);
+  const [passengersCount, setPassengersCount] = useTripStore(s => [
+    s.passengersCount,
+    s.setPassengersCount,
+  ]);
+  const [currentAddress, setCurrentAddress] = useTripStore(s => [
+    s.currentAddress,
+    s.setCurrentAddress,
+  ]);
+  const message = useTripStore(s => s.message);
+
+  //# Maps
   const {
     hasLocation,
     gpsAccessDenied,
@@ -48,13 +59,36 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
   const mapRef = useRef<MapView>();
   const mapReady = useRef<boolean>(false);
   const following = useRef<boolean>(true);
+
+  //# Bottom Sheet
+  //@ Request Ride
+  const requestRideBottomSheetRef = useRef<BottomSheet>(null);
+  const requestRideSnapPoints = useMemo(() => ['50%', '75%', '100%'], []);
+  //@ In Ride Pending
+  const inRidePendingBottomSheetRef = useRef<BottomSheet>(null);
+
+  //# User Info
+  const {data: myProfile} = useRequest<GetMyProfile>({
+    method: 'GET',
+    url: '/users/me',
+  });
+
+  //# Realtime
   const socket = useSocketStore(s => s.socket);
   const availableDrivers = useSocketStore(s => s.availableDrivers);
   const inRide = useSocketStore(s => s.inRide);
   const inRidePending = useSocketStore(s => s.inRidePending);
-  const disabledToRequestRide = !!inRide || !!inRidePending;
 
-  console.log({inRide, inRidePending, disabledToRequestRide});
+  //# Other Hooks Utils
+  const {
+    window: {width: windowWidth, height: windowHeight},
+  } = useDimensions();
+
+  //# Based on Existing state
+  const isInRide = !!inRide;
+  const isInRidePending = !!inRidePending;
+  const disabledToRequestRide = isInRide || isInRidePending;
+  const canRequestRide = !disabledToRequestRide;
 
   const sendRequestRide = () => {
     if (disabledToRequestRide) {
@@ -82,33 +116,20 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
     });
   };
 
-  // const handleSheetChanges = useCallback((index: number) => {
-  // console.log('handleSheetChanges', index);
-  // }, []);
+  const cancelPendingRequestRide = () => {
+    if (!inRidePending) return;
 
-  const fillLocationInputs = useCallback(() => {
-    if (
-      userLocation.latitude === defaultUserLocation.latitude &&
-      userLocation.longitude === defaultUserLocation.longitude &&
-      !mapReady.current
-    ) {
-      console.log('aun no está listo');
-      return;
-    }
+    socket?.emit('CANCEL_RIDE_PENDING', {
+      id: inRidePending.id,
+      passenger: {
+        id: inRidePending.user.id,
+      },
+    });
+  };
 
-    mapRef.current
-      ?.addressForCoordinate(userLocation)
-      .then(address => {
-        setCurrentAddress(
-          `${address.thoroughfare} ${address.name}, ${address.locality}`,
-        );
-      })
-      .catch(() => {
-        console.log('HomeScreenCurrentLocation error');
-        // TODO: verificar si debo dejar esto acá o no
-        fillLocationInputs();
-      });
-  }, [userLocation]);
+  const handleSheetChanges = useCallback((index: number) => {
+    console.log('handleSheetChanges', index);
+  }, []);
 
   const centerPosition = async () => {
     const {latitude, longitude} = await getCurrentLocation();
@@ -120,6 +141,34 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
       center: {latitude, longitude},
     });
   };
+
+  const fillLocationInputs = useCallback(() => {
+    if (
+      userLocation.latitude === defaultUserLocation.latitude &&
+      userLocation.longitude === defaultUserLocation.longitude &&
+      !mapReady.current
+    )
+      return;
+
+    mapRef.current
+      ?.addressForCoordinate(userLocation)
+      .then(address => {
+        if (!currentAddress) {
+          showNotification({
+            title: 'Yuju',
+            description: 'Tu dirección se autocompletó',
+          });
+        }
+
+        setCurrentAddress(
+          `${address.thoroughfare} ${address.name}, ${address.locality}`,
+        );
+      })
+      .catch(() => {
+        // TODO: verificar si debo dejar esto acá o no
+        fillLocationInputs();
+      });
+  }, [userLocation]);
 
   useEffect(() => {
     fillLocationInputs();
@@ -138,6 +187,7 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
     }
 
     const {latitude, longitude} = userLocation;
+
     mapRef.current?.animateCamera({
       center: {latitude, longitude},
     });
@@ -195,7 +245,7 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
             centerPosition();
           }}
           onTouchStart={() => (following.current = false)}>
-          <Marker
+          <MyMarker
             coordinate={{
               latitude: userLocation.latitude,
               longitude: userLocation.longitude,
@@ -207,11 +257,11 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
               rounded="circle"
               source={{uri: myProfile?.user.profile.avatar}}
             />
-          </Marker>
+          </MyMarker>
 
           {availableDrivers.map(
             ({id, name, avatar, location: {latitude, longitude}}) => (
-              <Marker
+              <MyMarker
                 key={id}
                 coordinate={{
                   latitude,
@@ -220,7 +270,7 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
                 title={name}
                 description="Mototaxista">
                 <Avatar size={10} rounded="circle" source={{uri: avatar}} />
-              </Marker>
+              </MyMarker>
             ),
           )}
         </MapView>
@@ -240,121 +290,189 @@ export const RequestScreen: React.FC<Props> = ({navigation, route}) => {
         </Button>
       </Div>
 
-      {/** Bottom Sheet */}
-      <BottomSheet
-        index={0}
-        // enablePanDownToClose
-        ref={bottomSheetRef}
-        snapPoints={snapPoints}
-        // onChange={handleSheetChanges}
-      >
-        <BottomSheetView style={globalStyles.container}>
-          <Div px="2xl" pt="lg" flex={1}>
-            <Div>
-              {/** Separator */}
-              <RequestScreenAskAddressesSeparator />
+      {canRequestRide ? (
+        <BottomSheet
+          index={0}
+          ref={requestRideBottomSheetRef}
+          snapPoints={requestRideSnapPoints}
+          onChange={handleSheetChanges}>
+          <BottomSheetScrollView>
+            <Div px="2xl" pt="lg" flex={1}>
+              <Div>
+                {/** Separator */}
+                <RequestScreenAskAddressesSeparator />
 
-              <RequestScreenAskAddressItem
-                leftIcon={
-                  <PulseActivityIndicator
-                    style={{
-                      alignItems: 'center',
-                      alignContent: 'center',
-                      alignSelf: 'center',
-                      justifyContent: 'center',
-                    }}
-                    size={25}
-                  />
-                }
-                locationInputLabel="Desde"
-                locationValue={
-                  currentAddress ? currentAddress : 'Mi ubicación actual'
-                }
-                onLocationInputPress={() =>
-                  navigation.navigate('ChooseStartingLocationScreen')
-                }
-              />
-
-              <RequestScreenAskAddressItem
-                mt="md"
-                leftIcon={
-                  <Icon
-                    alignSelf="center"
-                    fontFamily="Ionicons"
-                    name="location"
-                    color="primary500"
-                    fontSize={25}
-                  />
-                }
-                locationInputLabel="Hasta"
-                locationValue="Elige tu destino"
-                onLocationInputPress={() =>
-                  navigation.navigate('ChooseDestinationLocationScreen')
-                }
-              />
-            </Div>
-
-            <Div mt="md">
-              {/** Cantidad de pasajeros */}
-              <Div row>
-                <RequestScreenAskExtraInfo
-                  title="¿Cuántos son?"
-                  subtitle="* Cantidad de personas que subirán a la mototaxi."
+                <RequestScreenAskAddressItem
+                  leftIcon={
+                    <PulseActivityIndicator
+                      style={{
+                        alignItems: 'center',
+                        alignContent: 'center',
+                        alignSelf: 'center',
+                        justifyContent: 'center',
+                      }}
+                      size={25}
+                    />
+                  }
+                  locationInputLabel="Desde"
+                  locationValue={
+                    currentAddress ? currentAddress : 'Mi ubicación actual'
+                  }
+                  onLocationInputPress={() =>
+                    // navigation.navigate('ChooseStartingLocationScreen')
+                    fillLocationInputs()
+                  }
                 />
-                <NumericInput
-                  validateOnBlur
-                  onLimitReached={(isMax, msg) => console.log(isMax, msg)}
-                  value={passengersCount}
-                  onChange={setPassengersCount}
-                  editable={false}
-                  minValue={1}
-                  step={1}
-                  maxValue={3}
-                  rounded
-                  valueType="integer"
-                  totalWidth={120}
+
+                <RequestScreenAskAddressItem
+                  mt="md"
+                  leftIcon={
+                    <Icon
+                      alignSelf="center"
+                      fontFamily="Ionicons"
+                      name="location"
+                      color="primary500"
+                      fontSize={25}
+                    />
+                  }
+                  locationInputLabel="Hasta"
+                  locationValue="Elige tu destino"
+                  onLocationInputPress={() =>
+                    navigation.navigate('ChooseDestinationLocationScreen')
+                  }
                 />
               </Div>
 
-              {/** Precio de carrera */}
-              <Div row mt="md">
-                <RequestScreenAskExtraInfo
-                  title="¿Cuánto pagas?"
-                  subtitle="* Cantidad que estás dispuesto a pagar (S/)."
-                />
-                <NumericInput
-                  validateOnBlur
-                  onLimitReached={(isMax, msg) => console.log(isMax, msg)}
-                  value={price}
-                  onChange={setPrice}
-                  editable={false}
-                  minValue={2}
-                  step={0.5}
-                  rounded
-                  valueType="real"
-                  totalWidth={120}
-                />
-              </Div>
-            </Div>
+              <Div mt="md">
+                {/** Cantidad de pasajeros */}
+                <Div row>
+                  <RequestScreenAskExtraInfo
+                    title="¿Cuántos son?"
+                    subtitle="* Cantidad de personas que subirán a la mototaxi."
+                  />
+                  <NumericInput
+                    validateOnBlur
+                    value={passengersCount}
+                    onChange={setPassengersCount}
+                    editable={false}
+                    minValue={1}
+                    step={1}
+                    maxValue={3}
+                    rounded
+                    valueType="integer"
+                    totalWidth={110}
+                  />
+                </Div>
 
-            <Button
-              disabled={disabledToRequestRide}
-              justifyContent="center"
-              alignItems="center"
-              alignSelf="center"
-              fontSize="2xl"
-              fontWeight="bold"
-              bg="primary500"
-              block
-              h={50}
-              mt="lg"
-              rounded="lg"
-              onPress={sendRequestRide}>
-              Solicitar Mototaxi
-            </Button>
+                {/** Precio de carrera */}
+                <Div row mt="md">
+                  <RequestScreenAskExtraInfo
+                    title="¿Cuánto pagas?"
+                    subtitle="* Cantidad que estás dispuesto a pagar (S/)."
+                  />
+                  <NumericInput
+                    validateOnBlur
+                    value={price}
+                    onChange={setPrice}
+                    editable={false}
+                    minValue={2}
+                    step={0.5}
+                    rounded
+                    valueType="real"
+                    totalWidth={110}
+                  />
+                </Div>
+
+                {/** Mensaje para el chófer */}
+                <Div mt="md">
+                  <RequestScreenAskMessageItem
+                    askMessageInputLabel="Mensaje"
+                    askMessageValue={message}
+                    onAskMessagePress={() =>
+                      navigation.navigate('WriteTripMessageScreen')
+                    }
+                  />
+                </Div>
+              </Div>
+
+              <Button
+                // disabled={disabledToRequestRide}
+                loading={isInRidePending}
+                justifyContent="center"
+                alignItems="center"
+                alignSelf="center"
+                fontSize="2xl"
+                fontWeight="bold"
+                bg="primary500"
+                block
+                h={50}
+                mt="lg"
+                rounded="lg"
+                onPress={sendRequestRide}>
+                Solicitar Mototaxi
+              </Button>
+            </Div>
+          </BottomSheetScrollView>
+        </BottomSheet>
+      ) : null}
+
+      {/** Hacer de esto un componente por aparte para aumentarle la lógica */}
+      {isInRidePending ? (
+        <BottomSheet ref={inRidePendingBottomSheetRef} snapPoints={['100%']}>
+          <Div flex={1} alignItems="center" justifyContent="center" px="2xl">
+            <PulseActivityIndicator />
+
+            <Text mt="lg" fontSize="xl" textAlign="center" fontWeight="bold">
+              Estamos buscando al mototaxista más cercano
+            </Text>
+
+            <Animatable.View animation="fadeInUp" delay={2000}>
+              <Text mt="lg">Esto puede tardar unos segundos.</Text>
+            </Animatable.View>
+
+            <Animatable.View
+              animation="fadeInUp"
+              delay={5000}
+              easing="ease-in-out">
+              <Button
+                mt="lg"
+                alignSelf="center"
+                px="md"
+                py="sm"
+                m={0}
+                fontSize="md"
+                bg="red50"
+                color="red500"
+                justifyContent="center"
+                alignItems="center"
+                underlayColor="red100"
+                rounded="lg"
+                onPress={cancelPendingRequestRide}>
+                Cancelar
+              </Button>
+            </Animatable.View>
+
+            <Animatable.View
+              style={{position: 'absolute', bottom: 10}}
+              animation="fadeIn"
+              delay={1000}
+              easing="ease-in-out">
+              <Div alignSelf="center" alignItems="center">
+                <Text
+                  fontSize={6}
+                  color="gray700"
+                  onPress={() => openLink(SHAIR_INSTAGRAM)}>
+                  Desarrollado por{' '}
+                  <Text fontSize={6} color="gray700" fontWeight="500">
+                    @shair.dev
+                  </Text>
+                  .
+                </Text>
+              </Div>
+            </Animatable.View>
           </Div>
-        </BottomSheetView>
-      </BottomSheet>
+        </BottomSheet>
+      ) : null}
     </Div>
   );
 };

@@ -1,20 +1,24 @@
 import React, {useEffect, useRef, useState, useCallback, Fragment} from 'react';
 import {Vibration} from 'react-native';
 import {Button, Div, Icon, Text, Skeleton, Avatar} from 'react-native-magnus';
-import MapView, {PROVIDER_GOOGLE, Marker} from 'react-native-maps';
+import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
+import {MyMarker} from '@yuju/components/atoms/MyMarker';
 import TextTicker from 'react-native-text-ticker';
 import {useLocation, defaultUserLocation} from '@yuju/global-hooks/useLocation';
 import {GPSAccessDenied} from '../molecules/GPSAccessDenied';
 import {useClipboard} from '@react-native-clipboard/clipboard';
-import {Notifier} from 'react-native-notifier';
 import {useRequest} from '../../global-hooks/useRequest';
 import {GetMyProfile} from '../../types/app';
 import {wait} from '@yuju/common/utils/time';
 import {useDimensions} from '@yuju/global-hooks/useDimensions';
 import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
 import {globalStyles} from '@yuju/styles/globals';
+import {showNotification} from '@yuju/common/utils/notification';
+import {useTimeout} from '@yuju/global-hooks/useTimeout';
+import {useIsMounted} from '@yuju/global-hooks/useIsMounted';
 
 export const HomeScreenCurrentLocation: React.FC = () => {
+  const isMounted = useIsMounted();
   const [currentAddress, setCurrentAddress] = useState<string | null>(null);
   const mapRef = useRef<MapView>();
   const following = useRef<boolean>(true);
@@ -38,6 +42,12 @@ export const HomeScreenCurrentLocation: React.FC = () => {
     getCurrentLocation,
     callGetCurrentLocation,
   } = useLocation();
+  useTimeout(
+    () => {
+      fillLocationInputs();
+    },
+    isMounted() ? 2000 : null,
+  );
 
   const fillLocationInputs = useCallback(() => {
     if (
@@ -54,20 +64,8 @@ export const HomeScreenCurrentLocation: React.FC = () => {
         setCurrentAddress(
           `${address.thoroughfare} ${address.name}, ${address.locality}, ${address.administrativeArea}`,
         );
-        // setCurrentAddress(
-        //   `${address.thoroughfare} ${address.name}, ${address.locality}, ${
-        //     address.administrativeArea
-        //   }, ${address.country.replace('Peru', 'Perú')} - ${
-        //     address.postalCode
-        //   }`,
-        // );
       })
-      .catch(error => {
-        console.log(error);
-        console.log('HomeScreenCurrentLocation error');
-        // TODO: verificar si debo dejar esto acá o no
-        fillLocationInputs();
-      });
+      .catch(() => fillLocationInputs());
   }, [userLocation]);
 
   const centerPosition = async () => {
@@ -90,7 +88,7 @@ export const HomeScreenCurrentLocation: React.FC = () => {
 
     Vibration.vibrate(15);
 
-    Notifier.showNotification({
+    showNotification({
       title: 'Portapapeles',
       description: 'Tu dirección ha sido copiado al portapapeles.',
       hideOnPress: true,
@@ -184,7 +182,7 @@ export const HomeScreenCurrentLocation: React.FC = () => {
                   centerPosition();
                 });
               }}>
-              <Marker
+              <MyMarker
                 coordinate={{
                   latitude: userLocation.latitude,
                   longitude: userLocation.longitude,
@@ -196,7 +194,7 @@ export const HomeScreenCurrentLocation: React.FC = () => {
                   rounded="circle"
                   source={{uri: myProfile?.user.profile.avatar}}
                 />
-              </Marker>
+              </MyMarker>
             </MapView>
             <Button
               position="absolute"

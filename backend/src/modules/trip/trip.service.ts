@@ -8,6 +8,7 @@ import {NotFound} from 'http-errors';
 import {GetUserTripsQueryType} from './schemas/get-user-trips.query';
 import {TripStatus} from '@prisma/client';
 import {InRidePending} from '../../providers/realtime/queue.service';
+import {GetDriverTripsQueryType} from './schemas/get-driver-trips.query';
 
 @Service('TripServiceToken')
 export class TripService {
@@ -34,6 +35,7 @@ export class TripService {
     const rankingsAverage = await this.ratingService.getDriverRatingAverage(
       driver.id,
     );
+    const completedTrips = await this.getMyDriversCompletedCount(driver.id);
 
     return {
       driver: {
@@ -42,12 +44,12 @@ export class TripService {
         avatar: driver.profile.avatar,
         createdAt: driver.createdAt,
         // resumen del mototaxista
-        summary: 'resumen del mototaxista',
-        completedTrips: 0,
+        summary: driver.summary,
+        completedTrips,
         // cantidad de calificaciones
         rankingsTotal,
         // fotos de la mototaxi (máximo 5) {String}
-        vehiclesPhotos: [],
+        vehiclesPhotos: driver.vehicle.photos,
         // 5 últimas calificaciones del mototaxista (avatar del usuario que hizo la calificacion, nombre del usuario, la calificación que estableció 1-5, hace cuanto tiempo se creó esa calificación, y la descripción que haya creado el usuario en el caso que haya una)
         rankings,
         // promedio de estrella (en base a las calificaciones)
@@ -57,6 +59,123 @@ export class TripService {
         id: user.id,
         name: user.profile.name,
       },
+    };
+  }
+
+  async getDriverTrips(id: string, data: GetDriverTripsQueryType) {
+    const driver = await this.driverService.findByIdOrThrow(id);
+
+    const {limit, page} = data;
+
+    const tripsFromDB = await this.databaseService.trip.findMany({
+      where: {
+        driver: {
+          id: driver.id,
+        },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      select: {
+        id: true,
+        driver: {
+          select: {
+            id: true,
+            profile: {
+              select: {
+                name: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            profile: {
+              select: {
+                name: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        from: {
+          select: {
+            id: true,
+            address: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+        to: {
+          select: {
+            id: true,
+            address: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+        passengersQuantity: true,
+        price: true,
+        status: true,
+        ratings: true,
+        startTime: true,
+        endTime: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const trips = tripsFromDB.map(
+      ({
+        id,
+        price,
+        passengersQuantity,
+        user,
+        driver,
+        status,
+        from,
+        to,
+        ratings,
+        startTime,
+        endTime,
+        createdAt,
+        updatedAt,
+      }) => {
+        return {
+          id,
+          price,
+          passengersQuantity,
+          user,
+          driver,
+          rating: Math.round(
+            ratings.reduce((suma, rating) => suma + rating.value, 0) /
+              ratings.length,
+          ),
+          from,
+          to,
+          status,
+          startTime,
+          endTime,
+          createdAt,
+          updatedAt,
+        };
+      },
+    );
+
+    const totalTrips = await this.getMyDriversCount(id);
+
+    const totalPages = Math.ceil(totalTrips / limit);
+
+    return {
+      data: trips,
+      page,
+      limit,
+      totalPages,
+      total: totalTrips,
     };
   }
 
@@ -122,6 +241,9 @@ export class TripService {
         createdAt: true,
         updatedAt: true,
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     const trips = tripsFromDB.map(
@@ -146,7 +268,10 @@ export class TripService {
           passengersQuantity,
           user,
           driver,
-          rating: ratings.reduce((suma, rating) => suma + rating.value, 0),
+          rating: Math.round(
+            ratings.reduce((suma, rating) => suma + rating.value, 0) /
+              ratings.length,
+          ),
           from,
           to,
           status,
@@ -169,6 +294,38 @@ export class TripService {
       totalPages,
       total: totalTrips,
     };
+  }
+
+  async getMyDriversCompletedCount(id: string) {
+    return this.databaseService.trip.count({
+      where: {
+        driver: {
+          id,
+        },
+        status: 'Completed',
+      },
+    });
+  }
+
+  async getMyUsersCompletedCount(id: string) {
+    return this.databaseService.trip.count({
+      where: {
+        user: {
+          id,
+        },
+        status: 'Completed',
+      },
+    });
+  }
+
+  async getMyDriversCount(id: string) {
+    return this.databaseService.trip.count({
+      where: {
+        driver: {
+          id,
+        },
+      },
+    });
   }
 
   async getMyUsersCount(id: string) {

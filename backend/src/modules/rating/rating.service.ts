@@ -6,8 +6,8 @@ import {GetDriverRatingsQueryType} from './schemas/get-driver-rating.query';
 import {DriverService} from '../driver/driver.service';
 import {CreateUserRatingsBodyType} from './schemas/create-user-rating.body';
 import {CreateDriverRatingsBodyType} from './schemas/create-driver-rating.body';
-import {TripService} from '../trip/trip.service';
-import {NotFound} from 'http-errors';
+import {NotFound, BadRequest} from 'http-errors';
+import {TripStatus} from '@prisma/client';
 
 @Service('RatingServiceToken')
 export class RatingService {
@@ -188,21 +188,6 @@ export class RatingService {
   }
 
   async getDriverRatingAverage(id: string) {
-    // const resultado = await this.databaseService.rating.groupBy({
-    //   where: {
-    //     id,
-    //   },
-    //   by: ['driverId'],
-    //   _sum: {
-    //     value: true,
-    //   },
-    //   _count: {
-    //     value: true,
-    //   },
-    // });
-    // const promedio = resultado[0]._sum.value! / resultado[0]._count.value;
-    // return promedio;
-
     const ratings = await this.databaseService.rating.findMany({
       where: {
         id,
@@ -228,11 +213,29 @@ export class RatingService {
     return trip;
   }
 
+  async findCompletedTripByIdOrThrow(id: string) {
+    const trip = await this.databaseService.trip.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!trip) {
+      throw new NotFound();
+    }
+
+    if (trip.status === TripStatus.Completed) {
+      throw new BadRequest(`CANNOT_RATING_UNCOMPLETED_TRIP`);
+    }
+
+    return trip;
+  }
+
   async createUserRating(id: string, data: CreateUserRatingsBodyType) {
     const [user, driver, trip] = await Promise.all([
       this.userService.findByIdOrThrow(id),
       this.driverService.findByIdOrThrow(data.driverId),
-      this.findTripByIdOrThrow(data.tripId),
+      this.findCompletedTripByIdOrThrow(data.tripId),
     ]);
 
     const createdRating = await this.databaseService.rating.create({
@@ -264,7 +267,7 @@ export class RatingService {
     const [driver, user, trip] = await Promise.all([
       this.driverService.findByIdOrThrow(id),
       this.userService.findByIdOrThrow(data.userId),
-      this.findTripByIdOrThrow(data.tripId),
+      this.findCompletedTripByIdOrThrow(data.tripId),
     ]);
 
     const createdRating = await this.databaseService.rating.create({

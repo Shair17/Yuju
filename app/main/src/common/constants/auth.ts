@@ -5,10 +5,10 @@ export type Tokens = {
 
 export const isNew = true;
 
-export const isNewKey = '@fastly/isNew';
+export const isNewKey = '@yuju-main/isNew';
 
-export const accessTokenKey = '@yuju/token';
-export const refreshTokenKey = '@yuju/refresh-token';
+export const accessTokenKey = '@yuju-main/token';
+export const refreshTokenKey = '@yuju-main/refresh-token';
 
 export const isBanned = false;
 

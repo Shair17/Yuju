@@ -2,6 +2,7 @@ import {FastifyRequest as Request, FastifyReply as Reply} from 'fastify';
 import {Controller, GET, Inject} from 'fastify-decorators';
 import {TripService} from './trip.service';
 import {
+  driverIsAuthenticated,
   hasBearerToken,
   userIsAuthenticated,
 } from '../../guards/auth-guard.hook';
@@ -13,6 +14,10 @@ import {
   GetUserTripsQuery,
   GetUserTripsQueryType,
 } from './schemas/get-user-trips.query';
+import {
+  GetDriverTripsQuery,
+  GetDriverTripsQueryType,
+} from './schemas/get-driver-trips.query';
 
 @Controller('/v1/trips')
 export class TripController {
@@ -32,6 +37,21 @@ export class TripController {
     reply: Reply,
   ) {
     return this.tripService.getUserTrips(request.user?.id!, request.query);
+  }
+
+  @GET('/drivers', {
+    onRequest: [hasBearerToken, driverIsAuthenticated],
+    schema: {
+      querystring: GetDriverTripsQuery,
+    },
+  })
+  async getDriverTrips(
+    request: Request<{
+      Querystring: GetDriverTripsQueryType;
+    }>,
+    reply: Reply,
+  ) {
+    return this.tripService.getDriverTrips(request.user?.id!, request.query);
   }
 
   @GET('/meet-your-driver/:driverId', {

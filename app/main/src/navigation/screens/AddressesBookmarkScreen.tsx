@@ -10,7 +10,7 @@ import {
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {ProfileStackParams} from '../bottom-tabs/ProfileStackScreen';
 import {FlashList} from '@shopify/flash-list';
-import {showNotification} from '@yuju/common/utils/notification';
+import {showAlert} from '@yuju/common/utils/notification';
 import {AddressBookmarkScreenAddressItem} from '@yuju/components/organisms/AddressBookmarkScreenAddressItem';
 import {useAddresses} from '@yuju/global-hooks/useAddresses';
 
@@ -35,7 +35,7 @@ export const AddressesBookmarkScreen: React.FC<Props> = ({navigation}) => {
 
   const goToAddCreateNewAddress = () => {
     if (hasReachedLimit) {
-      showNotification({
+      showAlert({
         title: 'Advertencia',
         description:
           'Alcanzaste el límite de direcciones, elimina una de tus direcciones existentes para agregar otra.',

@@ -2,7 +2,7 @@ import jwtDecode, {type JwtPayload} from 'jwt-decode';
 import AxiosGlobal, {AxiosInstance, AxiosRequestConfig} from 'axios';
 import {useAuthStore, ITokens} from '@yuju/global-stores/useAuthStore';
 import {isValidToken} from '@yuju/common/utils/token';
-import {Notifier, NotifierComponents} from 'react-native-notifier';
+import {showAlert} from '@yuju/common/utils/notification';
 
 // a little time before expiration to try refresh (seconds)
 const EXPIRE_FUDGE = 10;
@@ -82,6 +82,7 @@ export const applyAuthTokenInterceptor = (
   if (!axios.interceptors) {
     throw new Error(`invalid axios instance: ${axios}`);
   }
+  // @ts-ignore
   axios.interceptors.request.use(authTokenInterceptor(config));
 
   axios.interceptors.response.use(
@@ -103,16 +104,12 @@ export const applyAuthTokenInterceptor = (
       ) {
         // The refresh token is invalid so remove the stored tokens
         useAuthStore.getState().removeTokens();
-        Notifier.showNotification({
+        showAlert({
           title: 'Sesión Expirada',
           description:
             'Tu sesión ha expirado, por favor vuelve a iniciar sesión.',
-          Component: NotifierComponents.Alert,
           duration: 3000,
-          componentProps: {
-            alertType: 'error',
-            backgroundColor: 'red',
-          },
+          alertType: 'error',
         });
       }
 
@@ -187,16 +184,12 @@ const refreshToken = async (
     if (status === 401 || status === 422) {
       // The refresh token is invalid so remove the stored tokens
       useAuthStore.getState().removeTokens();
-      Notifier.showNotification({
+      showAlert({
         title: 'Sesión Expirada',
         description:
           'Tu sesión ha expirado, por favor vuelve a iniciar sesión.',
-        Component: NotifierComponents.Alert,
         duration: 3000,
-        componentProps: {
-          alertType: 'error',
-          backgroundColor: 'red',
-        },
+        alertType: 'error',
       });
       error.message = `Got ${status} on token refresh; clearing both auth tokens`;
     }

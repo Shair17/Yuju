@@ -2,7 +2,7 @@ import React, {useRef, useCallback, useEffect, Fragment} from 'react';
 import {ScrollView} from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {ProfileStackParams} from '../bottom-tabs/ProfileStackScreen';
-import {showNotification} from '@yuju/common/utils/notification';
+import {showAlert} from '@yuju/common/utils/notification';
 import {defaultUserLocation, useLocation} from '@yuju/global-hooks/useLocation';
 import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';
 import {
@@ -15,7 +15,8 @@ import {
   Skeleton,
   Text,
 } from 'react-native-magnus';
-import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
+import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
+import {MyMarker} from '@yuju/components/atoms/MyMarker';
 import {GPSAccessDenied} from '@yuju/components/molecules/GPSAccessDenied';
 import {useDimensions} from '@yuju/global-hooks/useDimensions';
 import {Controller} from 'react-hook-form';
@@ -29,13 +30,6 @@ interface Props
     ProfileStackParams,
     'AddAddressesBookmarkScreen'
   > {}
-
-export type LocationInformationType = {
-  name: string;
-  address: string;
-  zip: string;
-  city: string;
-};
 
 export const AddAddressesBookmarkScreen: React.FC<Props> = ({navigation}) => {
   const {
@@ -134,7 +128,7 @@ export const AddAddressesBookmarkScreen: React.FC<Props> = ({navigation}) => {
       .catch(() => {
         fillLocationInputs();
 
-        showNotification({
+        showAlert({
           title: 'Error al obtener tu dirección',
           description:
             'No hemos podido autocompletar tu dirección, por favor ingresa tu dirección manualmente.',
@@ -178,7 +172,7 @@ export const AddAddressesBookmarkScreen: React.FC<Props> = ({navigation}) => {
 
   useEffect(() => {
     if (hasReachedLimit) {
-      showNotification({
+      showAlert({
         title: 'Advertencia',
         description:
           'Alcanzaste el límite de direcciones, elimina una de tus direcciones existentes para agregar otra.',
@@ -239,7 +233,7 @@ export const AddAddressesBookmarkScreen: React.FC<Props> = ({navigation}) => {
                     centerPosition();
                   });
                 }}>
-                <Marker
+                <MyMarker
                   coordinate={{
                     latitude: userLocation.latitude,
                     longitude: userLocation.longitude,
@@ -251,7 +245,7 @@ export const AddAddressesBookmarkScreen: React.FC<Props> = ({navigation}) => {
                     rounded="circle"
                     source={{uri: myProfile?.user.profile.avatar}}
                   />
-                </Marker>
+                </MyMarker>
               </MapView>
               <Button
                 position="absolute"

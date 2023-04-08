@@ -36,7 +36,7 @@ export const AskProfileDataScreen: React.FC<Props> = ({
   });
   const {mutate: mutateIsNewUser} = useRequest<boolean>({
     method: 'GET',
-    url: '/users/me/is-new',
+    url: '/users/im-new',
   });
   const [{loading}, executeCreateProfile] = useAxios<
     CreateProfileResponse,

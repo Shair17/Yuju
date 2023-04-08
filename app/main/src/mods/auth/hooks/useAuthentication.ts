@@ -1,13 +1,13 @@
 import {useState, useCallback} from 'react';
 import {StatusBar} from 'react-native';
 import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
-import {Notifier, NotifierComponents} from 'react-native-notifier';
 import {useAuthStore} from '@yuju/global-stores/useAuthStore';
 import useAxios from 'axios-hooks';
 import {
   LoginWithFacebookBody,
   LoginWithFacebookResponse,
 } from '@yuju/types/app';
+import {showAlert} from '@yuju/common/utils/notification';
 
 export const useAuthentication = () => {
   const [overlayVisible, setOverlayVisible] = useState<boolean>(false);
@@ -34,14 +34,11 @@ export const useAuthentication = () => {
       setOverlayVisible(true);
 
       if (isCancelled) {
-        Notifier.showNotification({
+        showAlert({
           title: 'Error',
           description:
             'El inicio de sesión con Facebook fue cancelado por el usuario.',
-          Component: NotifierComponents.Alert,
-          componentProps: {
-            alertType: 'warn',
-          },
+          alertType: 'warn',
           containerStyle: {
             paddingTop: StatusBar.currentHeight,
           },
@@ -61,14 +58,11 @@ export const useAuthentication = () => {
             },
           })
             .then(response => {
-              Notifier.showNotification({
+              showAlert({
                 title: 'Yuju',
                 description:
                   'Inicio de sesión con éxito, cargando tus datos...',
-                Component: NotifierComponents.Alert,
-                componentProps: {
-                  alertType: 'success',
-                },
+                alertType: 'success',
                 containerStyle: {
                   paddingTop: StatusBar.currentHeight,
                 },
@@ -83,16 +77,12 @@ export const useAuthentication = () => {
                 },
               });
             })
-            .catch(error => {
-              Notifier.showNotification({
+            .catch(() => {
+              showAlert({
                 title: 'Error',
                 description:
                   'Error al conectarse a Yuju, intenta nuevamente en unos minutos.',
-                Component: NotifierComponents.Alert,
-                componentProps: {
-                  alertType: 'error',
-                  backgroundColor: 'red',
-                },
+                alertType: 'error',
                 containerStyle: {
                   paddingTop: StatusBar.currentHeight,
                 },
@@ -100,14 +90,11 @@ export const useAuthentication = () => {
               setOverlayVisible(false);
             });
         } else {
-          Notifier.showNotification({
+          showAlert({
             title: 'Error',
             description:
               'Los datos necesarios para iniciar sesión no fueron recibidos correctamente.',
-            Component: NotifierComponents.Alert,
-            componentProps: {
-              alertType: 'warn',
-            },
+            alertType: 'warn',
             containerStyle: {
               paddingTop: StatusBar.currentHeight,
             },
@@ -117,14 +104,10 @@ export const useAuthentication = () => {
         }
       }
     } catch (error) {
-      Notifier.showNotification({
+      showAlert({
         title: 'Error',
         description: 'Ocurrió un error al conectarse a la SDK de Facebook.',
-        Component: NotifierComponents.Alert,
-        componentProps: {
-          alertType: 'error',
-          backgroundColor: 'red',
-        },
+        alertType: 'error',
         containerStyle: {
           paddingTop: StatusBar.currentHeight,
         },

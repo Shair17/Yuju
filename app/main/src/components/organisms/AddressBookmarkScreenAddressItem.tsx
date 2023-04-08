@@ -3,7 +3,7 @@ import {TouchableOpacity, Alert} from 'react-native';
 import {Div, Icon, Text} from 'react-native-magnus';
 import {GetMyAddressesResponse, MyAddress} from '@yuju/types/app';
 import {getAddressBottomSheetIconName} from '@yuju/common/utils/address-icon';
-import {showNotification} from '@yuju/common/utils/notification';
+import {showAlert} from '@yuju/common/utils/notification';
 import {useRequest} from '@yuju/global-hooks/useRequest';
 import useAxios from 'axios-hooks';
 
@@ -47,7 +47,7 @@ export const AddressBookmarkScreenAddressItem: React.FC<Props> = ({
     }
 
     if (myAddresses.addresses.length <= 1) {
-      showNotification({
+      showAlert({
         title: 'Advertencia',
         description: 'No puedes borrar la única dirección que tienes.',
         alertType: 'warn',

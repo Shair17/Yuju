@@ -7,18 +7,16 @@ import {CloudinaryService} from '../../providers/cloudinary/cloudinary.service';
 import {
   defaultAvatarUri,
   MAX_ADDRESSES_PER_USER,
-  MAXIMUM_EARNINGS_FOR_REFERRALS,
 } from '../../common/constants/app';
 import {CreateMeBodyType} from './schemas/create-me.body';
-import {generateRandomReferralCode} from '../../common/utils/random';
 import {CreateUserBodyType} from './schemas/create-user.body';
 import {Availability, Profile} from '@prisma/client';
-import {MAXIMUM_REFERRALS} from '../../common/constants/app';
-import {GetIsBannedResponseType} from './schemas/is-banned.response';
 import {GetUserMyDriversQueryType} from './schemas/get-user-my-drivers.query';
 import {CreateAddressBodyType} from './schemas/create-address.body';
+import {ReferralService} from '../referral/referral.service';
+import {GetUserIsBannedResponseType} from './schemas/is-banned.response';
 
-type UpdateTokens = {
+type TUpdateTokens = {
   accessToken: string | null;
   refreshToken: string | null;
 };
@@ -27,6 +25,9 @@ type UpdateTokens = {
 export class UserService {
   @Inject(DatabaseService)
   private readonly databaseService: DatabaseService;
+
+  @Inject(ReferralService)
+  private readonly referralService: ReferralService;
 
   @Inject(CloudinaryService)
   private readonly cloudinaryService: CloudinaryService;
@@ -232,7 +233,7 @@ export class UserService {
       data.facebookId,
       data.name,
     );
-    const referralCode = await this.generateReferralCode();
+    const referralCode = await this.referralService.generateReferralCode();
 
     const createdUser = await this.databaseService.user.create({
       data: {
@@ -266,7 +267,7 @@ export class UserService {
     return createdUser;
   }
 
-  async updateTokens(id: string, tokens: UpdateTokens) {
+  async updateTokens(id: string, tokens: TUpdateTokens) {
     return this.databaseService.user.update({
       where: {
         id,
@@ -304,63 +305,6 @@ export class UserService {
     return this.databaseService.user.count();
   }
 
-  async getReferrals(id: string) {
-    const user = await this.databaseService.user.findUnique({
-      where: {
-        id,
-      },
-      select: {
-        referralCode: true,
-        referredBy: {
-          select: {
-            id: true,
-            profile: {
-              select: {
-                name: true,
-                avatar: true,
-              },
-            },
-          },
-        },
-        referredUsers: {
-          select: {
-            id: true,
-            profile: {
-              select: {
-                name: true,
-                avatar: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      throw new Unauthorized(`USER_NOT_FOUND`);
-    }
-
-    const myReferrals = user.referredUsers.map(
-      ({id, profile: {avatar, name}}) => ({
-        id,
-        name,
-        avatar,
-      }),
-    );
-
-    const referrals = myReferrals.slice(0, MAXIMUM_REFERRALS);
-
-    return {
-      earn: MAXIMUM_EARNINGS_FOR_REFERRALS,
-      myEarnings:
-        referrals.length * (MAXIMUM_EARNINGS_FOR_REFERRALS / MAXIMUM_REFERRALS),
-      maxReferrals: MAXIMUM_REFERRALS,
-      code: user.referralCode,
-      referrals,
-      referredBy: user.referredBy,
-    };
-  }
-
   async getMe(id: string) {
     const user = await this.databaseService.user.findUnique({
       where: {
@@ -391,7 +335,22 @@ export class UserService {
     return this.databaseService.user.findMany();
   }
 
-  async isBanned(id: string): Promise<GetIsBannedResponseType> {
+  async removeBanned(id: string): Promise<void> {
+    await this.databaseService.user.update({
+      where: {id},
+      data: {
+        availability: {
+          update: {
+            isBanned: false,
+            bannedUntil: null,
+            banReason: null,
+          },
+        },
+      },
+    });
+  }
+
+  async isBanned(id: string): Promise<GetUserIsBannedResponseType> {
     const user = await this.databaseService.user.findUnique({
       where: {
         id,
@@ -580,6 +539,11 @@ export class UserService {
           id: user.id,
         },
         data: {
+          availability: {
+            update: {
+              activationDate: new Date(),
+            },
+          },
           referredBy: {
             connect: {
               id: referredByUser.id,
@@ -611,6 +575,11 @@ export class UserService {
           id: user.id,
         },
         data: {
+          availability: {
+            update: {
+              activationDate: new Date(),
+            },
+          },
           profile: {
             update: {
               avatar: avatar ?? defaultAvatarUri,
@@ -717,59 +686,5 @@ export class UserService {
         referralCode: code,
       },
     });
-  }
-
-  async getUserFromReferralCode(id: string, code: string) {
-    const user = await this.databaseService.user.findUnique({
-      where: {
-        referralCode: code,
-      },
-      select: {
-        id: true,
-        referralCode: true,
-        profile: {
-          select: {
-            name: true,
-            avatar: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      throw new NotFound(`USER_FROM_REFERRAL_CODE_NOT_FOUND`);
-    }
-
-    if (user.id === id) {
-      throw new BadRequest(`CANT_USE_OWN_CODE`);
-    }
-
-    return {
-      referralCode: user.referralCode,
-      user: {
-        id: user.id,
-        name: user.profile.name,
-        avatar: user.profile.avatar,
-      },
-    };
-  }
-
-  async generateReferralCode(): Promise<string> {
-    const referralCode = generateRandomReferralCode();
-
-    const foundUser = await this.databaseService.user.findFirst({
-      where: {
-        referralCode,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (!foundUser) {
-      return referralCode;
-    }
-
-    return generateRandomReferralCode();
   }
 }

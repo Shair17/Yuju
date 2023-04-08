@@ -75,6 +75,7 @@ export type SocketStoreValues = {
   availableDrivers: Driver[];
   inRide: InRide | null;
   inRidePending: InRidePending | null;
+  allowedToUseApp: boolean;
 };
 
 const getDefaultValues = (): SocketStoreValues => {
@@ -84,6 +85,7 @@ const getDefaultValues = (): SocketStoreValues => {
     availableDrivers: [],
     inRide: null,
     inRidePending: null,
+    allowedToUseApp: true,
   };
 };
 
@@ -139,5 +141,8 @@ export const useSocketStore = create(
     setInRide: (inRide: SocketStoreValues['inRide']) => set({inRide}),
     setInRidePending: (inRidePending: SocketStoreValues['inRidePending']) =>
       set({inRidePending}),
+    setAllowedToUseApp: (
+      allowedToUseApp: SocketStoreValues['allowedToUseApp'],
+    ) => set({allowedToUseApp}),
   })),
 );

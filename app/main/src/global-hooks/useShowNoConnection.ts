@@ -1,7 +1,7 @@
 import {useEffect} from 'react';
 import {Vibration} from 'react-native';
 import {useNetInfo} from '@react-native-community/netinfo';
-import {Notifier} from 'react-native-notifier';
+import {showNotification} from '@yuju/common/utils/notification';
 
 export const useShowNoConnection = () => {
   const netInfo = useNetInfo();
@@ -14,7 +14,7 @@ export const useShowNoConnection = () => {
     const isOnline = netInfo.isConnected;
 
     if (!isOnline) {
-      Notifier.showNotification({
+      showNotification({
         title: 'Internet',
         description: 'Sin conexión a Internet.',
         onShown() {

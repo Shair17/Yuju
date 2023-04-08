@@ -1,1 +1,1 @@
-export const themeStorageKey = '@yuju/theme';
+export const themeStorageKey = '@yuju-main/theme';

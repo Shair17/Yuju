@@ -56,6 +56,8 @@ export type RootStackParams = {
     referralCode?: string;
   };
 
+  NotAllowedToUseAppScreen: undefined;
+
   Application: undefined;
 };
 
@@ -73,6 +75,7 @@ export const Root: React.FC = () => {
   const isConnected = useIsConnected();
   const socket = useSocketStore(s => s.socket);
   const socketStatus = useSocketStore(s => s.status);
+  const allowedToUseApp = useSocketStore(s => s.allowedToUseApp);
   const appShouldUpdate = useShouldUpdate();
   const {theme} = useTheme();
   const {userLocation} = useLocation();
