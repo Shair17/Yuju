@@ -1,7 +1,7 @@
 import {useEffect} from 'react';
-import {useAuthStore} from '@yuju/global-stores/useAuthStore';
 import {useRequest} from './useRequest';
 import {useIsAuthenticated} from './useIsAuthenticated';
+import {useAuthStore} from '@yuju/global-stores/useAuthStore';
 
 export const useIsNew = (): boolean => {
   const isAuthenticated = useIsAuthenticated();

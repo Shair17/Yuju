@@ -44,6 +44,7 @@
     "react-native-image-picker": "^5.0.1",
     "react-native-magnus": "^1.0.63",
     "react-native-maps": "^1.4.0",
+    "react-native-maps-directions": "^1.9.0",
     "react-native-mmkv": "2.5.1",
     "react-native-modal": "^13.0.1",
     "react-native-notifier": "^1.9.0",

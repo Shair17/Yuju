@@ -25,7 +25,7 @@ export const AskProfileDataScreen: React.FC<Props> = ({
     params: {avatar, referralCode},
   },
 }) => {
-  const {control, handleSubmit, formState, setError} = useEditProfile();
+  const {control, handleSubmit, formState} = useEditProfile();
   const {
     isLoading,
     isValidating,
@@ -72,19 +72,9 @@ export const AskProfileDataScreen: React.FC<Props> = ({
       },
     })
       .then(async () => {
-        await mutateMyProfile();
-        await mutateIsNewUser();
+        await Promise.all([mutateMyProfile, mutateIsNewUser]);
       })
-      .catch(error => {
-        // Error: INVALID_DNI
-        const isInvalidDNI = error?.response?.data.message === 'INVALID_DNI';
-
-        if (isInvalidDNI) {
-          setError('dni', {
-            message: 'DNI inválido',
-          });
-        }
-      });
+      .catch();
   });
 
   return (
@@ -111,11 +101,13 @@ export const AskProfileDataScreen: React.FC<Props> = ({
               }}
               render={({field: {onChange, onBlur, value}}) => (
                 <Input
+                  autoFocus
                   mt="md"
                   placeholder="Correo electrónico"
                   keyboardType="email-address"
                   fontSize="lg"
                   rounded="lg"
+                  autoCapitalize="none"
                   focusBorderColor="primary700"
                   fontWeight="500"
                   onBlur={onBlur}

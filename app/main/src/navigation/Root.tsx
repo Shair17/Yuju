@@ -24,6 +24,8 @@ import {useIsNew} from '@yuju/global-hooks/useIsNew';
 import {MinigameScreen} from './screens/MinigameScreen';
 import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
 import {useLocation} from '@yuju/global-hooks/useLocation';
+import {useAllowedToUseApp} from '@yuju/global-hooks/useAllowedToUseApp';
+import {NotAllowedToUseAppScreen} from './screens/NotAllowedToUseAppScreen';
 
 export type RootStackParams = {
   /**
@@ -75,7 +77,7 @@ export const Root: React.FC = () => {
   const isConnected = useIsConnected();
   const socket = useSocketStore(s => s.socket);
   const socketStatus = useSocketStore(s => s.status);
-  const allowedToUseApp = useSocketStore(s => s.allowedToUseApp);
+  const allowedToUseApp = useAllowedToUseApp();
   const appShouldUpdate = useShouldUpdate();
   const {theme} = useTheme();
   const {userLocation} = useLocation();
@@ -205,6 +207,15 @@ export const Root: React.FC = () => {
                 }}
               />
             </RootStack.Group>
+          ) : // Not Allowed to use App
+          !allowedToUseApp ? (
+            <RootStack.Screen
+              name="NotAllowedToUseAppScreen"
+              component={NotAllowedToUseAppScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
           ) : (
             <RootStack.Screen
               name="Application"

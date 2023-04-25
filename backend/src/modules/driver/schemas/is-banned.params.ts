@@ -3,7 +3,7 @@ import {CUID_REGEX} from '../../../common/regex/index';
 
 export const GetDriverIsBannedParams = Type.Object(
   {
-    userId: Type.RegEx(CUID_REGEX),
+    driverId: Type.RegEx(CUID_REGEX),
   },
   {
     additionalProperties: false,

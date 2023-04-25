@@ -15,6 +15,14 @@ import {
 } from './schemas/is-banned.response';
 import {CreateMeBody, CreateMeBodyType} from './schemas/create-me.body';
 import {UpdateMeBody, UpdateMeBodyType} from './schemas/update-me.body';
+import {
+  GetMyVehicleQuery,
+  GetMyVehicleQueryType,
+} from './schemas/get-my-vehicle.query';
+import {
+  GetMyEarningsQuery,
+  GetMyEarningsQueryType,
+} from './schemas/get-earnings.query';
 
 @Controller('/v1/drivers')
 export class DriverController {
@@ -22,7 +30,7 @@ export class DriverController {
   private readonly driverService: DriverService;
 
   @GET('/')
-  async getUsers() {
+  async getDrivers() {
     return this.driverService.getDrivers();
   }
 
@@ -37,7 +45,7 @@ export class DriverController {
     onRequest: [hasBearerToken, driverIsAuthenticated],
   })
   async getIsNew(request: Request, reply: Reply) {
-    return this.driverService.isNew(request.user?.id!);
+    return this.driverService.isNew(request.driver?.id!);
   }
 
   @GET('/:driverId/is-banned', {
@@ -55,14 +63,36 @@ export class DriverController {
     }>,
     reply: Reply,
   ) {
-    return this.driverService.isBanned(request.params.userId);
+    return this.driverService.isBanned(request.params.driverId);
+  }
+
+  @GET('/im-active', {
+    onRequest: [hasBearerToken, driverIsAuthenticated],
+  })
+  async getImActive(request: Request, reply: Reply) {
+    return this.driverService.getImActive(request.driver?.id!);
   }
 
   @GET('/me', {
     onRequest: [hasBearerToken, driverIsAuthenticated],
   })
   async getMe(request: Request, reply: Reply) {
-    return this.driverService.getMe(request.user?.id!);
+    return this.driverService.getMe(request.driver?.id!);
+  }
+
+  @GET('/me/vehicle', {
+    onRequest: [hasBearerToken, driverIsAuthenticated],
+    schema: {
+      querystring: GetMyVehicleQuery,
+    },
+  })
+  async getVehicle(
+    request: Request<{
+      Querystring: GetMyVehicleQueryType;
+    }>,
+    reply: Reply,
+  ) {
+    return this.driverService.getVehicle(request.driver?.id!, request.query);
   }
 
   // For create driver profile when is new driver
@@ -95,5 +125,27 @@ export class DriverController {
     reply: Reply,
   ) {
     return this.driverService.updateMe(request.driver?.id!, request.body);
+  }
+
+  @GET('/earnings/total', {
+    onRequest: [hasBearerToken, driverIsAuthenticated],
+  })
+  async getMyTotalEarnings(request: Request, reply: Reply) {
+    return this.driverService.getMyTotalEarnings(request.driver?.id!);
+  }
+
+  @GET('/earnings', {
+    onRequest: [hasBearerToken, driverIsAuthenticated],
+    schema: {
+      querystring: GetMyEarningsQuery,
+    },
+  })
+  async getMyEarnings(
+    request: Request<{
+      Querystring: GetMyEarningsQueryType;
+    }>,
+    reply: Reply,
+  ) {
+    return this.driverService.getMyEarnings(request.driver?.id!, request.query);
   }
 }

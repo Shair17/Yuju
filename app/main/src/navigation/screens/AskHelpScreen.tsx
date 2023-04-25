@@ -43,7 +43,7 @@ export const AskHelpScreen: React.FC<Props> = () => {
 
     showNotification({
       title: 'Portapapeles',
-      description: 'Tu dirección ha sido copiado al portapapeles.',
+      description: 'El correo electrónico ha sido copiado al portapapeles.',
       hideOnPress: true,
     });
   };

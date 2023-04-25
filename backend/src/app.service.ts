@@ -45,14 +45,15 @@ export class AppService {
 
   async _dropDatabase() {
     const res = await Promise.all([
-      await this.databaseService.user.deleteMany(),
-      await this.databaseService.profile.deleteMany(),
-      await this.databaseService.driver.deleteMany(),
       await this.databaseService.availability.deleteMany(),
       await this.databaseService.bugReport.deleteMany(),
-      await this.databaseService.trip.deleteMany(),
-      await this.databaseService.rating.deleteMany(),
+      await this.databaseService.driver.deleteMany(),
       await this.databaseService.location.deleteMany(),
+      await this.databaseService.profile.deleteMany(),
+      await this.databaseService.rating.deleteMany(),
+      await this.databaseService.trip.deleteMany(),
+      await this.databaseService.user.deleteMany(),
+      await this.databaseService.vehicle.deleteMany(),
     ]);
 
     return res;

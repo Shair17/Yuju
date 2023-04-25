@@ -51,7 +51,7 @@ export class TripController {
     }>,
     reply: Reply,
   ) {
-    return this.tripService.getDriverTrips(request.user?.id!, request.query);
+    return this.tripService.getDriverTrips(request.driver?.id!, request.query);
   }
 
   @GET('/meet-your-driver/:driverId', {

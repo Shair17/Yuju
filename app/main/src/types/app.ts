@@ -224,9 +224,9 @@ export type MyReportsActivityResponse = {
   total: number;
 };
 
-export type CreateProfileResponse = {
+export interface CreateProfileResponse extends GetMyProfile {
   created: boolean;
-} & GetMyProfile;
+}
 
 export type CreateProfileBody = {
   avatar?: string;
@@ -248,6 +248,15 @@ export type UpdateProfileBody = {
   phoneNumber: string;
   birthDate: string;
 };
+
+export interface ReferralCodeResponse {
+  referralCode: string;
+  user: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+}
 
 export type LoginWithFacebookResponse = {
   accessToken: string;

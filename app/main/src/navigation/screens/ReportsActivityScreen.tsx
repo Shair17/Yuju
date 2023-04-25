@@ -25,7 +25,7 @@ export const ReportsActivityScreen: React.FC<Props> = ({navigation}) => {
   if (isLoading) {
     return (
       <Div bg="body" flex={1} px="2xl">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item, key) => (
+        {[...Array(10).keys()].map((item, key) => (
           <Skeleton key={key} h={70} rounded="lg" mt="lg" p="lg" bg="gray100" />
         ))}
       </Div>

@@ -304,7 +304,6 @@ export const MeetYourDriverScreen: React.FC<Props> = ({navigation, route}) => {
       {/** Driver Avatar Preview */}
       {photoPreviewOverlayVisible ? (
         <PhotoPreviewOverlay
-          // TODO: una vez salga a producción remover esta condición y dejar solo en `photo`
           avatar={
             typeof photo === 'string'
               ? {

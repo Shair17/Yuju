@@ -56,7 +56,7 @@ export class ReferralController {
     reply: Reply,
   ) {
     return this.referralService.getDriverFromReferralCode(
-      request.user?.id!,
+      request.driver?.id!,
       request.params.code,
     );
   }
@@ -65,6 +65,6 @@ export class ReferralController {
     onRequest: [hasBearerToken, driverIsAuthenticated],
   })
   async getDriverReferrals(request: Request, reply: Reply) {
-    return this.referralService.getDriverReferrals(request.user?.id!);
+    return this.referralService.getDriverReferrals(request.driver?.id!);
   }
 }

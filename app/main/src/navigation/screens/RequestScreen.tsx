@@ -10,10 +10,7 @@ import {useRequest} from '@yuju/global-hooks/useRequest';
 import {GetMyProfile} from '@yuju/types/app';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RequestStackParams} from '../bottom-tabs/RequestStackScreen';
-import BottomSheet, {
-  BottomSheetScrollView,
-  BottomSheetView,
-} from '@gorhom/bottom-sheet';
+import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import {PulseActivityIndicator} from '@yuju/components/atoms/PulseActivityIndicator';
 import {useDimensions} from '@yuju/global-hooks/useDimensions';
 import NumericInput from 'react-native-numeric-input';

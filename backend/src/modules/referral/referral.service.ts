@@ -2,6 +2,7 @@ import {Inject, Service} from 'fastify-decorators';
 import {DatabaseService} from '../../database/database.service';
 import {NotFound, BadRequest, Unauthorized} from 'http-errors';
 import {generateRandomReferralCode} from '../../common/utils/random';
+import {DriverService} from '../driver/driver.service';
 import {
   MAXIMUM_EARNINGS_FOR_REFERRALS,
   MAXIMUM_REFERRALS,
@@ -11,6 +12,9 @@ import {
 export class ReferralService {
   @Inject(DatabaseService)
   private readonly databaseService: DatabaseService;
+
+  @Inject(DriverService)
+  private readonly driverService: DriverService;
 
   async getUserReferrals(id: string) {
     const user = await this.databaseService.user.findUnique({
@@ -184,6 +188,13 @@ export class ReferralService {
 
     if (driver.id === id) {
       throw new BadRequest(`CANT_USE_OWN_CODE`);
+    }
+
+    const isNew = await this.driverService.isNew(driver.id);
+    const {isActive} = await this.driverService.getImActive(driver.id);
+
+    if (isNew || !isActive) {
+      throw new NotFound(`DRIVER_FROM_REFERRAL_CODE_NOT_FOUND`);
     }
 
     return {

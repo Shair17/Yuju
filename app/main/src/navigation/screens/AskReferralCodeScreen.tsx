@@ -16,29 +16,16 @@ import {RootStackParams} from '../Root';
 import {useRequest} from '@yuju/global-hooks/useRequest';
 import {useForm, Controller} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
-import {z} from 'zod';
+import {ReferralCodeResponse} from '@yuju/types/app';
+import {
+  AskReferralCodeFormDataValues,
+  askReferralCodeSchema,
+} from '@yuju/common/schemas/ask-referral-code.schema';
 
 const EMOJI_IMG = require('@yuju/assets/images/money-mouth-face.png');
 
-type FormData = {
-  referralCode?: string;
-};
-
-const schemaValidator = z.object({
-  referralCode: z.optional(z.string().min(6).max(6)),
-});
-
 interface Props
   extends NativeStackScreenProps<RootStackParams, 'AskReferralCodeScreen'> {}
-
-type ReferralCodeResponse = {
-  referralCode: string;
-  user: {
-    id: string;
-    name: string;
-    avatar: string;
-  };
-};
 
 export const AskReferralCodeScreen: React.FC<Props> = ({navigation}) => {
   const {
@@ -48,22 +35,31 @@ export const AskReferralCodeScreen: React.FC<Props> = ({navigation}) => {
     formState: {errors},
     clearErrors,
     resetField,
-  } = useForm<FormData>({
-    resolver: zodResolver(schemaValidator),
+  } = useForm<AskReferralCodeFormDataValues>({
+    resolver: zodResolver(askReferralCodeSchema),
   });
   const referralCode = watch('referralCode');
+  const canMakeRequest = !!referralCode && referralCode.length === 6;
   const {
     data: referralCodeResponse,
     isLoading,
     isError,
+    error,
   } = useRequest<ReferralCodeResponse>(
-    !!referralCode && referralCode.length === 6
+    canMakeRequest
       ? {
           method: 'GET',
           url: `/referrals/user/${referralCode}`,
         }
       : null,
   );
+  const referralCodeNotFound =
+    isError &&
+    // @ts-ignore
+    error?.response?.data?.message === 'USER_FROM_REFERRAL_CODE_NOT_FOUND';
+  const cantUseOwnCodeError =
+    // @ts-ignore
+    isError && error?.response?.data?.message === 'CANT_USE_OWN_CODE';
 
   const handleNext = handleSubmit(data => {
     navigation.navigate('AskAvatarScreen', {
@@ -152,6 +148,11 @@ export const AskReferralCodeScreen: React.FC<Props> = ({navigation}) => {
             {errors.referralCode ? (
               <Text color="red500" mt="md">
                 El código debe contener 6 caracteres.
+              </Text>
+            ) : null}
+            {referralCodeNotFound || cantUseOwnCodeError ? (
+              <Text color="red500" mt="md">
+                Prueba con otro código.
               </Text>
             ) : null}
 

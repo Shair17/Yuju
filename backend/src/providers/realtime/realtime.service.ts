@@ -201,6 +201,10 @@ export class RealTimeService implements OnModuleInit {
 
     // Ubicación del pasajero en tiempo real
     socket.on('PASSENGER_LOCATION', (userLocation: ILocation) => {
+      if (userLocation.latitude === 0 && userLocation.longitude === 0) {
+        return;
+      }
+
       // Actualizamos en la cola de pasajeros (usuarios)
       this.queueService.editUsersQueue({
         ...user,
@@ -427,6 +431,44 @@ export class RealTimeService implements OnModuleInit {
       .of('/users')
       .emit('AVAILABLE_DRIVERS', this.queueService.driversToArray());
 
+    // Pending Rides
+    // socket.emit('PENDING_RIDES', this.queueService.inRidePendingToArray());
+    socket.emit('PENDING_RIDES', [
+      {
+        id: '123',
+        user: {
+          id: '1234509876543',
+          facebookId: '1234567890',
+          name: 'Jimmy Morales',
+          email: 'hello@shair.dev',
+          phoneNumber: '966107266',
+          dni: '74408267',
+          avatar: 'https://avatars.githubusercontent.com/u/18153674?v=4',
+          isAdmin: false,
+          location: {
+            latitude: 0,
+            longitude: 0,
+          },
+        },
+        from: {
+          address: 'Ricardo Palma 200 Chequen',
+          location: {
+            latitude: -7.2312306766348655,
+            longitude: -79.41698569669288,
+          },
+        },
+        to: {
+          address: 'Talambo',
+          location: {
+            latitude: -7.241504526019357,
+            longitude: -79.40049305319835,
+          },
+        },
+        passengersQuantity: 1,
+        ridePrice: 3,
+      },
+    ]);
+
     if (this.queueService.driverExistsInRide(driver.id)) {
       socket.emit(
         'DRIVER_IN_RIDE',
@@ -436,6 +478,10 @@ export class RealTimeService implements OnModuleInit {
 
     // Ubicación del chofer en tiempo real
     socket.on('DRIVER_LOCATION', (driverLocation: ILocation) => {
+      if (driverLocation.latitude === 0 && driverLocation.longitude === 0) {
+        return;
+      }
+
       // Actualizamos en la cola de pasajeros (usuarios)
       this.queueService.editDriversQueue({
         ...driver,

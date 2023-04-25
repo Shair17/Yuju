@@ -6,7 +6,7 @@ import {ProfileStackParams} from '../bottom-tabs/ProfileStackScreen';
 import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';
 import {Controller} from 'react-hook-form';
 import {useBugReport} from '@yuju/global-hooks/useBugReport';
-import {Notifier} from 'react-native-notifier';
+import {showNotification} from '@yuju/common/utils/notification';
 
 interface Props
   extends NativeStackScreenProps<ProfileStackParams, 'ReportBugScreen'> {}
@@ -29,7 +29,7 @@ export const ReportBugScreen: React.FC<Props> = ({navigation}) => {
       },
     }).then(response => {
       if (response.data.created) {
-        Notifier.showNotification({
+        showNotification({
           title: 'Reportes',
           description:
             'Tu reporte ha sido enviado, gracias por ayudar a mejorar Yuju.',
@@ -118,9 +118,11 @@ export const ReportBugScreen: React.FC<Props> = ({navigation}) => {
                 onChangeText={onChange}
                 value={value}
                 borderColor={formState.errors.description ? 'red' : 'gray400'}
-                prefix={<Icon fontFamily="Ionicons" name="document" mr="xs" />}
-                multiline={true}
+                textAlignVertical="top"
+                // prefix={<Icon fontFamily="Ionicons" name="document" mr="xs" />}
                 numberOfLines={3}
+                multiline
+                maxLength={200}
               />
             )}
             name="description"
@@ -141,7 +143,7 @@ export const ReportBugScreen: React.FC<Props> = ({navigation}) => {
           <Controller
             control={control}
             rules={{
-              required: true,
+              required: false,
             }}
             render={({field: {onChange, onBlur, value}}) => (
               <Input

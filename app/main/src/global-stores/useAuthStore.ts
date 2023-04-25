@@ -63,8 +63,15 @@ export const useAuthStore = create(
         refreshToken: '',
       });
     },
+    removeIsNewCache: () => {
+      storage.delete(isNewKey);
+
+      set({
+        isNew: isNew,
+      });
+    },
     logOutFromYuju: async () => {
-      await http.post('/auth/user/facebook/logout');
+      await http.delete('/auth/user/facebook/logout');
     },
   })),
 );

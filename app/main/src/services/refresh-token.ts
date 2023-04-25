@@ -104,6 +104,7 @@ export const applyAuthTokenInterceptor = (
       ) {
         // The refresh token is invalid so remove the stored tokens
         useAuthStore.getState().removeTokens();
+        useAuthStore.getState().removeIsNewCache();
         showAlert({
           title: 'Sesión Expirada',
           description:

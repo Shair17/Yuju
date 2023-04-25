@@ -17,7 +17,7 @@ import {BadRequest, Unauthorized, InternalServerError} from 'http-errors';
 import {AuthTokenPayload} from '../../interfaces/tokens';
 import {TokenService} from '../../shared/tokens/token.service';
 
-@Service()
+@Service('AuthServiceToken')
 export class AuthService {
   @Inject(TokenService)
   private readonly tokenService: TokenService;

@@ -29,6 +29,7 @@ export const AskAvatarScreen: React.FC<Props> = ({
     openPhotoOverlay,
     photoDropdownRef,
     avatarToSend,
+    userPickedAvatar,
   } = useEditProfile();
 
   const handleNext = () => {
@@ -44,7 +45,7 @@ export const AskAvatarScreen: React.FC<Props> = ({
         <Div flex={1} p="2xl">
           <Div flex={3}>
             <AskScreenHeadingTitle
-              title="Es momento de resaltar en Yuju, agrega una foto de perfil."
+              title="Es momento de resaltar en Yuju, agrega una foto de perfil"
               subtitle="Puedes hacerlo más tarde, no hay problema."
             />
 
@@ -87,7 +88,7 @@ export const AskAvatarScreen: React.FC<Props> = ({
               h={55}
               fontSize="3xl"
               onPress={handleNext}>
-              Continuar
+              {userPickedAvatar ? 'Continuar' : 'Saltar'}
             </Button>
           </Div>
         </Div>

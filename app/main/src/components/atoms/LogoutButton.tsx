@@ -5,9 +5,11 @@ import {useAuthStore} from '@yuju/global-stores/useAuthStore';
 
 export const LogoutButton: React.FC = () => {
   const removeTokens = useAuthStore(s => s.removeTokens);
+  const logOutFromYuju = useAuthStore(s => s.logOutFromYuju);
 
-  const logout = () => {
+  const logout = async () => {
     removeTokens();
+    await logOutFromYuju();
   };
 
   return (

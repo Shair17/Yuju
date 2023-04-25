@@ -11,6 +11,7 @@ import RateLimitPlugin from '@fastify/rate-limit';
 import SocketIOPlugin from 'fastify-socket.io';
 import CompressPlugin from '@fastify/compress';
 import StaticPlugin from '@fastify/static';
+import MultipartPlugin from '@fastify/multipart';
 // import PrismaPlugin from './common/plugins/prisma';
 import GracefulExitPlugin from '@mgcrea/fastify-graceful-exit';
 // import ShutdownPlugin from './common/plugins/shutdown';
@@ -52,6 +53,7 @@ export default async function Server(
     max: 100,
     timeWindow: '1 minute',
   });
+  app.register(MultipartPlugin);
   // app.register(CorsPlugin);
   [
     'user',

@@ -78,6 +78,9 @@ export class RatingService {
       },
       skip: (page - 1) * limit,
       take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
       select: {
         id: true,
         driver: {
@@ -138,6 +141,9 @@ export class RatingService {
         },
       },
       skip: (page - 1) * limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
       take: limit,
       select: {
         id: true,

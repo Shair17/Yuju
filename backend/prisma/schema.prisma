@@ -91,13 +91,22 @@ model User {
 model Vehicle {
   id String @id @default(cuid())
 
-  photos String[]
+  // dniPhotos String[]
+  dniVerified Boolean  @default(false) @map("dni_verified")
+  photos      String[]
 
-  license         String?
-  propertyCard    String? @map("property_card")
-  circulationCard String? @map("circulation_card")
-  technicalReview String? @map("technical_review")
-  soat            String?
+  licenseVerified         Boolean @default(false) @map("license_verified")
+  propertyCardVerified    Boolean @default(false) @map("property_card_verified")
+  circulationCardVerified Boolean @default(false) @map("circulation_card_verified")
+  technicalReviewVerified Boolean @default(false) @map("technical_review_verified")
+  soatVerified            Boolean @default(false) @map("soat_verified")
+  // license         String[]
+  // propertyCard    String[] @map("property_card")
+  // circulationCard String[] @map("circulation_card")
+  // technicalReview String[] @map("technical_review")
+  // soat            String[]
+
+  plate String?
 
   driver Driver[]
 

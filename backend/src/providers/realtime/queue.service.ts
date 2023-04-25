@@ -138,7 +138,9 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       }
 
       this.loggerService.info(
-        `Queue Service has been finished, loaded ${trips.length} ${trips.length > 1 ? 'trips' : 'trip'}.`,
+        `Queue Service has been finished, loaded ${trips.length} ${
+          trips.length > 1 ? 'trips' : 'trip'
+        }.`,
       );
     } else {
       this.loggerService.info(
@@ -755,7 +757,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   }
 
   getClosestDriver(passengerLocation: ILocation, index = 0): Driver | null {
-    if (passengerLocation.latitude === 0 || passengerLocation.longitude === 0) {
+    if (passengerLocation.latitude === 0 && passengerLocation.longitude === 0) {
       return null;
     }
 
@@ -778,7 +780,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       const foundDriver = sortedDrivers[0];
 
       if (
-        foundDriver.location.latitude === 0 ||
+        foundDriver.location.latitude === 0 &&
         foundDriver.location.longitude === 0
       ) {
         return this.getClosestDriver(passengerLocation, index + 1);

@@ -56,6 +56,9 @@ export class BugReportService {
       },
       skip: (page - 1) * limit,
       take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
       select: {
         id: true,
         title: true,
@@ -92,6 +95,9 @@ export class BugReportService {
       },
       skip: (page - 1) * limit,
       take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
       select: {
         id: true,
         title: true,

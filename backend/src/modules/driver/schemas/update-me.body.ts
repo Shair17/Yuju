@@ -7,6 +7,7 @@ export const UpdateMeBody = Type.Object(
     email: Type.String({format: 'email'}),
     dni: Type.RegEx(DNI_REGEX),
     phoneNumber: Type.RegEx(PHONE_NUMBER_REGEX),
+    summary: Type.String(),
     birthDate: Type.String(),
   },
   {

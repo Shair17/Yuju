@@ -54,12 +54,14 @@ Table users {
 
 Table vehicles {
   id String [pk]
+  dniVerified Boolean [not null, default: false]
   photos String[] [not null]
-  license String
-  propertyCard String
-  circulationCard String
-  technicalReview String
-  soat String
+  licenseVerified Boolean [not null, default: false]
+  propertyCardVerified Boolean [not null, default: false]
+  circulationCardVerified Boolean [not null, default: false]
+  technicalReviewVerified Boolean [not null, default: false]
+  soatVerified Boolean [not null, default: false]
+  plate String
   driver drivers [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]

@@ -58,7 +58,7 @@ export class RatingController {
   }
 
   @GET('/drivers', {
-    onRequest: [hasBearerToken, userIsAuthenticated],
+    onRequest: [hasBearerToken, driverIsAuthenticated],
     schema: {
       querystring: GetDriverRatingsQuery,
     },
@@ -70,7 +70,7 @@ export class RatingController {
     reply: Reply,
   ) {
     return this.ratingService.getDriverRatings(
-      request.user?.id!,
+      request.driver?.id!,
       request.query,
     );
   }

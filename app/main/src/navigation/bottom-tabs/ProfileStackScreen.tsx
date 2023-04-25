@@ -17,6 +17,8 @@ import {MyReferralsScreen} from '../screens/MyReferralsScreen';
 import {ReferralsScreen} from '../screens/ReferralsScreen';
 import {MeetYourDriverScreen} from '../screens/MeetYourDriverScreen';
 import {AddAddressesBookmarkScreen} from '../screens/AddAddressesBookmarkScreen';
+import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
+import {RootTabsParams} from './Root';
 
 export type ProfileStackParams = {
   ProfileScreen: undefined;
@@ -43,7 +45,10 @@ export type ProfileStackParamsValue = keyof ProfileStackParams;
 
 const ProfileStack = createNativeStackNavigator<ProfileStackParams>();
 
-export const ProfileStackScreen = () => {
+interface Props
+  extends BottomTabScreenProps<RootTabsParams, 'ProfileStackScreen'> {}
+
+export const ProfileStackScreen: React.FC<Props> = () => {
   const {theme} = useTheme();
 
   return (

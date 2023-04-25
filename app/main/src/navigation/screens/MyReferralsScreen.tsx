@@ -18,12 +18,6 @@ interface Props
     'MyReferralsScreen'
   > {}
 
-// En esta pantalla mostrar más datos sobre mis referidos
-// datos como: fecha en la que se metieron como mis referidos
-// su foto de perfil
-// su nombre
-// eso es todo, nada más
-
 export const MyReferralsScreen: React.FC<Props> = ({navigation}) => {
   const {isLoading, data: myReferrals} = useRequest<GetReferralsResponse>({
     method: 'GET',

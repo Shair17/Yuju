@@ -77,7 +77,7 @@ export class BugReportController {
     reply: Reply,
   ) {
     return this.bugReportService.getDriverBugReports(
-      request.user?.id!,
+      request.driver?.id!,
       request.query,
     );
   }
@@ -95,7 +95,7 @@ export class BugReportController {
     reply: Reply,
   ) {
     return this.bugReportService.createDriverBugReport(
-      request.user?.id!,
+      request.driver?.id!,
       request.body,
     );
   }

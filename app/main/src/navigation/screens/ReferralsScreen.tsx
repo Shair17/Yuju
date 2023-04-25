@@ -1,10 +1,9 @@
 import React from 'react';
-import {TouchableOpacity} from 'react-native';
+import {TouchableOpacity, StatusBar} from 'react-native';
 import {Div, Text, Icon, Button, Avatar, Image} from 'react-native-magnus';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {ProfileStackParams} from '../bottom-tabs/ProfileStackScreen';
 import {HomeStackParams} from '../bottom-tabs/HomeStackScreen';
-import {StatusBar} from 'react-native';
 import {ReferrerItem} from '@yuju/components/molecules/ReferrerItem';
 import {useShareMyReferralCode} from '@yuju/global-hooks/useShareMyReferralCode';
 import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';

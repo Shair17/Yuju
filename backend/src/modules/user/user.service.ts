@@ -186,6 +186,9 @@ export class UserService {
         },
       },
       skip: (page - 1) * limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
       take: limit,
       select: {
         id: true,
@@ -465,9 +468,9 @@ export class UserService {
       select: {
         id: true,
         profile: true,
-        facebookId: true,
-        facebookAccessToken: true,
-        availability: true,
+        // facebookId: true,
+        // facebookAccessToken: true,
+        // availability: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -515,15 +518,15 @@ export class UserService {
     };
 
     let createdUser: CreatedUserResponse;
-    const referredCode = data.referredByCode;
+    const isReferred = !!data.referredByCode;
     let referredByUser: {
       id: string;
     } | null;
 
-    if (!!referredCode) {
+    if (isReferred) {
       referredByUser = await this.databaseService.user.findUnique({
         where: {
-          referralCode: referredCode,
+          referralCode: data.referredByCode,
         },
         select: {
           id: true,
@@ -532,8 +535,6 @@ export class UserService {
     }
 
     if (!!referredByUser!) {
-      console.log('hay un código');
-
       createdUser = await this.databaseService.user.update({
         where: {
           id: user.id,

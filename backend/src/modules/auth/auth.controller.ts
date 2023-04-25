@@ -16,6 +16,7 @@ import {
 import {LogInUserWithFacebookResponse} from './schemas/auth-user-facebook.response';
 import {LogInDriverWithFacebookResponse} from './schemas/auth-driver-facebook.response';
 import {
+  driverIsAuthenticated,
   hasBearerToken,
   userIsAuthenticated,
 } from '../../guards/auth-guard.hook';
@@ -97,7 +98,9 @@ export class AuthController {
     return this.authService.refreshDriverFacebookToken(request.body);
   }
 
-  @DELETE('/driver/facebook/logout')
+  @DELETE('/driver/facebook/logout', {
+    onRequest: [hasBearerToken, driverIsAuthenticated],
+  })
   async logOutDriverFromFacebook(request: Request, reply: Reply) {
     reply.removeHeader('authorization');
     return this.authService.logOutDriverFromFacebook(request.driver?.id!);
