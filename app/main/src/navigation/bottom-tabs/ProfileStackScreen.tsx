@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {useTheme} from 'react-native-magnus';
 import {ProfileScreen} from '../screens/ProfileScreen';
@@ -19,6 +19,7 @@ import {MeetYourDriverScreen} from '../screens/MeetYourDriverScreen';
 import {AddAddressesBookmarkScreen} from '../screens/AddAddressesBookmarkScreen';
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {RootTabsParams} from './Root';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
 
 export type ProfileStackParams = {
   ProfileScreen: undefined;
@@ -48,8 +49,20 @@ const ProfileStack = createNativeStackNavigator<ProfileStackParams>();
 interface Props
   extends BottomTabScreenProps<RootTabsParams, 'ProfileStackScreen'> {}
 
-export const ProfileStackScreen: React.FC<Props> = () => {
+export const ProfileStackScreen: React.FC<Props> = ({navigation}) => {
   const {theme} = useTheme();
+  const inRide = useSocketStore(s => s.inRide);
+  const inRidePending = useSocketStore(s => s.inRidePending);
+  const isInRide = !!inRide;
+  const isInRidePending = !!inRidePending;
+
+  const shouldGoToRequestScreen = isInRide || isInRidePending;
+
+  useEffect(() => {
+    if (!shouldGoToRequestScreen) return;
+
+    navigation.jumpTo('RequestStackScreen');
+  }, [shouldGoToRequestScreen, navigation]);
 
   return (
     <ProfileStack.Navigator

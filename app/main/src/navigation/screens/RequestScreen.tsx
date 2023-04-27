@@ -25,22 +25,34 @@ import {RequestScreenAskMessageItem} from '@yuju/components/organisms/RequestScr
 import * as Animatable from 'react-native-animatable';
 import {openLink} from '@yuju/common/utils/link';
 import {SHAIR_INSTAGRAM} from '@yuju/common/constants/app';
+import {useIsMounted} from '@yuju/global-hooks/useIsMounted';
+import {useTimeout} from '@yuju/global-hooks/useTimeout';
 
 interface Props
   extends NativeStackScreenProps<RequestStackParams, 'RequestScreen'> {}
 
 export const RequestScreen: React.FC<Props> = ({navigation}) => {
+  const isMounted = useIsMounted();
+
   //# Trip State
   const [price, setPrice] = useTripStore(s => [s.price, s.setPrice]);
   const [passengersCount, setPassengersCount] = useTripStore(s => [
     s.passengersCount,
     s.setPassengersCount,
   ]);
-  const [currentAddress, setCurrentAddress] = useTripStore(s => [
-    s.currentAddress,
-    s.setCurrentAddress,
+  const [fromAddress, setFromAddress] = useTripStore(s => [
+    s.fromAddress,
+    s.setFromAddress,
   ]);
-  const message = useTripStore(s => s.message);
+  const [toAddress, setToAddress] = useTripStore(s => [
+    s.toAddress,
+    s.setToAddress,
+  ]);
+  const [toLocation, setToLocation] = useTripStore(s => [
+    s.toLocation,
+    s.setToLocation,
+  ]);
+  const askMessageValuePlaceholder = useTripStore(s => s.message);
 
   //# Maps
   const {
@@ -87,6 +99,13 @@ export const RequestScreen: React.FC<Props> = ({navigation}) => {
   const disabledToRequestRide = isInRide || isInRidePending;
   const canRequestRide = !disabledToRequestRide;
 
+  useTimeout(
+    () => {
+      fillLocationInputs();
+    },
+    isMounted() ? 2000 : null,
+  );
+
   const sendRequestRide = () => {
     if (disabledToRequestRide) {
       return;
@@ -95,18 +114,12 @@ export const RequestScreen: React.FC<Props> = ({navigation}) => {
     socket?.emit('REQUEST_RIDE', {
       passengerId: myProfile?.user.id,
       from: {
-        address: currentAddress,
-        location: {
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-        },
+        address: fromAddress,
+        location: userLocation,
       },
       to: {
-        address: currentAddress,
-        location: {
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-        },
+        address: fromAddress,
+        location: toLocation,
       },
       passengersQuantity: passengersCount,
       ridePrice: price,
@@ -150,14 +163,14 @@ export const RequestScreen: React.FC<Props> = ({navigation}) => {
     mapRef.current
       ?.addressForCoordinate(userLocation)
       .then(address => {
-        if (!currentAddress) {
+        if (!fromAddress) {
           showNotification({
             title: 'Yuju',
             description: 'Tu dirección se autocompletó',
           });
         }
 
-        setCurrentAddress(
+        setFromAddress(
           `${address.thoroughfare} ${address.name}, ${address.locality}`,
         );
       })
@@ -197,6 +210,29 @@ export const RequestScreen: React.FC<Props> = ({navigation}) => {
       socket?.off('PASSENGER_LOCATION');
     };
   }, [socket, userLocation]);
+
+  useEffect(() => {
+    if (
+      toLocation.latitude === defaultUserLocation.latitude &&
+      toLocation.longitude === defaultUserLocation.longitude &&
+      !mapReady.current
+    ) {
+      return;
+    }
+
+    mapRef.current
+      ?.addressForCoordinate(toLocation)
+      .then(address => {
+        setToAddress(
+          `${address.thoroughfare ?? ''} ${address.name}, ${
+            address.locality
+          }`.trim(),
+        );
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }, [toLocation]);
 
   if (gpsAccessDenied) {
     return <GPSAccessDenied onButtonPress={callGetCurrentLocation} />;
@@ -290,8 +326,11 @@ export const RequestScreen: React.FC<Props> = ({navigation}) => {
       {canRequestRide ? (
         <BottomSheet
           index={0}
+          enableOverDrag={false}
+          enableContentPanningGesture={false}
           ref={requestRideBottomSheetRef}
           snapPoints={requestRideSnapPoints}
+          enableHandlePanningGesture={false}
           onChange={handleSheetChanges}>
           <BottomSheetScrollView>
             <Div px="2xl" pt="lg" flex={1}>
@@ -313,7 +352,7 @@ export const RequestScreen: React.FC<Props> = ({navigation}) => {
                   }
                   locationInputLabel="Desde"
                   locationValue={
-                    currentAddress ? currentAddress : 'Mi ubicación actual'
+                    fromAddress ? fromAddress : 'Mi ubicación actual'
                   }
                   onLocationInputPress={() =>
                     // navigation.navigate('ChooseStartingLocationScreen')
@@ -333,7 +372,7 @@ export const RequestScreen: React.FC<Props> = ({navigation}) => {
                     />
                   }
                   locationInputLabel="Hasta"
-                  locationValue="Elige tu destino"
+                  locationValue={toAddress ? toAddress : 'Elige tu destino'}
                   onLocationInputPress={() =>
                     navigation.navigate('ChooseDestinationLocationScreen')
                   }
@@ -384,7 +423,7 @@ export const RequestScreen: React.FC<Props> = ({navigation}) => {
                 <Div mt="md">
                   <RequestScreenAskMessageItem
                     askMessageInputLabel="Mensaje"
-                    askMessageValue={message}
+                    askMessageValue={askMessageValuePlaceholder}
                     onAskMessagePress={() =>
                       navigation.navigate('WriteTripMessageScreen')
                     }

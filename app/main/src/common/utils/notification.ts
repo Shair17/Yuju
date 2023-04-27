@@ -7,6 +7,7 @@ interface ShowNotificationProps {
   onShown?: () => void;
   onHidden?: () => void;
   containerStyle?: any;
+  duration?: number;
 }
 
 export const showNotification = ({
@@ -16,6 +17,7 @@ export const showNotification = ({
   onShown,
   onHidden,
   containerStyle,
+  duration,
 }: ShowNotificationProps) => {
   Notifier.showNotification({
     title,
@@ -24,6 +26,7 @@ export const showNotification = ({
     description,
     hideOnPress,
     containerStyle,
+    duration,
   });
 };
 

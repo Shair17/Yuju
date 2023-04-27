@@ -1,5 +1,10 @@
 import React from 'react';
-import {Icon, Avatar, Skeleton} from 'react-native-magnus';
+import {
+  TouchableWithoutFeedback,
+  TouchableOpacity,
+  Pressable,
+} from 'react-native';
+import {Icon, Avatar, Skeleton, Div} from 'react-native-magnus';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import * as Animatable from 'react-native-animatable';
 import {HomeStackScreen} from './HomeStackScreen';
@@ -9,6 +14,8 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParams} from '../Root';
 import {useRequest} from '@yuju/global-hooks/useRequest';
 import {GetMyProfile} from '@yuju/types/app';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {showAlert, showNotification} from '@yuju/common/utils/notification';
 
 export type RootTabsParams = {
   HomeStackScreen: undefined;
@@ -26,10 +33,18 @@ export const Root: React.FC<Props> = () => {
     method: 'GET',
     url: '/users/me',
   });
+  const inRide = useSocketStore(s => s.inRide);
+  const inRidePending = useSocketStore(s => s.inRidePending);
+  const isInRide = !!inRide;
+  const isInRidePending = !!inRidePending;
+
+  const shouldGoToRequestScreen = isInRide || isInRidePending;
 
   return (
     <Tab.Navigator
-      initialRouteName="HomeStackScreen"
+      initialRouteName={
+        shouldGoToRequestScreen ? 'RequestStackScreen' : 'HomeStackScreen'
+      }
       backBehavior="history"
       screenOptions={{
         tabBarShowLabel: false,
@@ -49,6 +64,7 @@ export const Root: React.FC<Props> = () => {
               easing="ease-in-out"
               duration={400}>
               <Icon
+                opacity={shouldGoToRequestScreen ? 0.25 : 1}
                 name={focused ? 'home' : 'home-outline'}
                 fontFamily="Ionicons"
                 color={color}
@@ -56,6 +72,19 @@ export const Root: React.FC<Props> = () => {
               />
             </Animatable.View>
           ),
+        }}
+        listeners={{
+          tabPress: event => {
+            if (shouldGoToRequestScreen) {
+              event.preventDefault();
+
+              showNotification({
+                title: 'Yuju',
+                description: 'No puedes navegar mientras está en una carrera.',
+                duration: 1000,
+              });
+            }
+          },
         }}
       />
       <Tab.Screen
@@ -93,6 +122,7 @@ export const Root: React.FC<Props> = () => {
                 <Skeleton.Circle w={26} h={26} bg="gray100" />
               ) : (
                 <Avatar
+                  opacity={shouldGoToRequestScreen ? 0.25 : 1}
                   rounded="circle"
                   size={focused ? 24 : 26}
                   borderWidth={focused ? 15 : 0}
@@ -104,16 +134,20 @@ export const Root: React.FC<Props> = () => {
             </Animatable.View>
           ),
         }}
+        listeners={{
+          tabPress: event => {
+            if (shouldGoToRequestScreen) {
+              event.preventDefault();
+
+              showNotification({
+                title: 'Yuju',
+                description: 'No puedes navegar mientras está en una carrera.',
+                duration: 1000,
+              });
+            }
+          },
+        }}
       />
     </Tab.Navigator>
   );
 };
-
-{
-  /* <Icon
-                  name={focused ? 'person' : 'person-outline'}
-                  fontFamily="Ionicons"
-                  color={color}
-                  fontSize={26}
-                /> */
-}

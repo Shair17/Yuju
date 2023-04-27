@@ -71,7 +71,7 @@ export const AskProfileDataScreen: React.FC<Props> = ({
         birthDate: String(date),
       },
     })
-      .then(async () => {
+      .then(async data => {
         await Promise.all([mutateMyProfile, mutateIsNewUser]);
       })
       .catch();

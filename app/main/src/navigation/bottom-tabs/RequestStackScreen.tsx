@@ -9,6 +9,8 @@ import {MeetYourDriverScreen} from '../screens/MeetYourDriverScreen';
 import {ChooseStartingLocationScreen} from '../screens/ChooseStartingLocationScreen';
 import {ChooseDestinationLocationScreen} from '../screens/ChooseDestinationLocationScreen';
 import {WriteTripMessageScreen} from '../screens/WriteTripMessageScreen';
+import {useBackHandler} from '@yuju/global-hooks/useBackHandler';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
 
 export type RequestStackParams = {
   RequestScreen: undefined;
@@ -30,6 +32,14 @@ interface Props
 
 export const RequestStackScreen: React.FC<Props> = () => {
   const {theme} = useTheme();
+  const inRide = useSocketStore(s => s.inRide);
+  const inRidePending = useSocketStore(s => s.inRidePending);
+  const isInRide = !!inRide;
+  const isInRidePending = !!inRidePending;
+
+  const shouldGoToRequestScreen = isInRide || isInRidePending;
+
+  useBackHandler(() => shouldGoToRequestScreen);
 
   return (
     <RequestStack.Navigator

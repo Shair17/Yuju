@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {TouchableOpacity} from 'react-native';
 import {Div, Text, DivProps} from 'react-native-magnus';
 import {getRandomPlaceholder} from '@yuju/common/utils/random';
@@ -16,7 +16,7 @@ export const RequestScreenAskMessageItem: React.FC<Props> = ({
   ...divProps
 }) => {
   const hasMessage = !!askMessageValue;
-  const randomPlaceholder = getRandomPlaceholder();
+  const randomPlaceholder = useMemo(getRandomPlaceholder, []);
 
   return (
     <Div row {...divProps}>
