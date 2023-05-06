@@ -11,6 +11,17 @@ import {
   appUpdateMessage,
 } from './common/constants/app';
 
+interface IApp {
+  server_name: string;
+  server_version: string;
+  app_name: string;
+  app_version: string;
+  app_developer: string;
+  app_update_message: string;
+  date: Date;
+  ts: number;
+}
+
 @Service('AppServiceToken')
 export class AppService {
   @Inject(DatabaseService)
@@ -59,15 +70,16 @@ export class AppService {
     return res;
   }
 
-  async getApp() {
+  async getApp(): Promise<IApp> {
+    const app = await this.databaseService.app.findFirst();
+
     return {
-      server_name: serverName,
-      server_version: serverVersion,
-      app_name: appName,
-      app_version: appVersion,
-      app_developer: appDeveloper,
-      // app_update_needed: appUpdateNeeded,
-      app_update_message: appUpdateMessage,
+      server_name: app?.serverName ?? serverName,
+      server_version: app?.serverName ?? serverVersion,
+      app_name: app?.appName ?? appName,
+      app_version: app?.appVersion ?? appVersion,
+      app_developer: app?.appDeveloper ?? appDeveloper,
+      app_update_message: app?.appUpdateMessage ?? appUpdateMessage,
       date: new Date(),
       ts: Date.now(),
     };

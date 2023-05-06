@@ -17,6 +17,7 @@ import {AuthTokenPayload} from '../../interfaces/tokens';
 import {DatabaseService} from '../../database/database.service';
 import {TripStatus} from '@prisma/client';
 import {CitieService} from '../cities/citie.service';
+import {generateRandomTrackingCode} from '../../common/utils/random';
 
 export interface ILocation {
   latitude: number;
@@ -299,7 +300,16 @@ export class RealTimeService implements OnModuleInit {
           return;
         }
 
-        const rideRequest = data;
+        const rideRequest: InRidePending = {
+          id: createdTrip.id,
+          user: {
+            ...user,
+            location: {
+              ...from.location,
+            },
+          },
+          ...data,
+        };
 
         // Emitir al driver más cercano la solicitud de carrera
         this.client
@@ -368,8 +378,9 @@ export class RealTimeService implements OnModuleInit {
         id: InRidePending['id'];
         passenger: {id: InRidePending['user']['id']};
       }) => {
-        if (!this.queueService.userExistsInRidePending(data.passenger.id))
+        if (!this.queueService.userExistsInRidePending(data.passenger.id)) {
           return;
+        }
 
         this.queueService.deleteFromInRidePendingQueue(data.id);
 
@@ -495,6 +506,7 @@ export class RealTimeService implements OnModuleInit {
     });
 
     socket.on('RIDE_REQUEST', async (data: IRequestRide) => {
+      // Si el chofer está en una carrera emitir la carrera nomás
       if (this.queueService.driverExistsInRide(driver.id)) {
         socket.emit(
           'DRIVER_IN_RIDE',
@@ -502,6 +514,66 @@ export class RealTimeService implements OnModuleInit {
         );
         return;
       }
+
+      socket.emit('ASK_DRIVER_FOR_RESPONSE', data);
+    });
+
+    socket.on('DRIVER_REPLY', async (data: InRidePending, reply: boolean) => {
+      const pendingRide = this.queueService.getFromInRidePendingQueue(data.id);
+
+      // La carrera pendiente no existe
+      if (!pendingRide) {
+        return;
+      }
+
+      // El chofer rechazó la carrera
+      if (!reply) {
+        this.client
+          .of('/users')
+          .to(pendingRide.user.id)
+          .emit('CANCEL_RIDE_PENDING', {
+            id: pendingRide.id,
+            passenger: {
+              id: pendingRide.user.id,
+            },
+          });
+        return;
+      }
+
+      // El chofer aceptó la carrera
+      this.queueService.enqueueToInRide({
+        id: pendingRide.id,
+        from: pendingRide.from,
+        to: pendingRide.to,
+        passengersQuantity: pendingRide.passengersQuantity,
+        ridePrice: pendingRide.ridePrice,
+        currentLocation: {
+          latitude: 0,
+          longitude: 0,
+        },
+        user: pendingRide.user,
+        driver: {
+          ...driver,
+          location: {
+            latitude: 0,
+            longitude: 0,
+          },
+        },
+        trackingCode: generateRandomTrackingCode(),
+      });
+
+      socket.emit(
+        'DRIVER_IN_RIDE',
+        this.queueService.driverIsInRide(driver.id),
+      );
+
+      this.client
+        .of('/users')
+        .to(pendingRide.user.id)
+        .emit(
+          'PASSENGER_IN_RIDE',
+          this.queueService.userIsInRide(pendingRide.user.id),
+        );
     });
 
     socket.on(
@@ -515,8 +587,9 @@ export class RealTimeService implements OnModuleInit {
         if (
           !this.queueService.userExistsInRide(data.passenger.id) ||
           !this.queueService.driverExistsInRide(data.driver.id)
-        )
+        ) {
           return;
+        }
 
         this.queueService.updateInRideLocation(data.id, data.location);
       },

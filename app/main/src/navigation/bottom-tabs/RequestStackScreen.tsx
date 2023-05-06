@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {RootTabsParams} from './Root';
@@ -11,6 +11,7 @@ import {ChooseDestinationLocationScreen} from '../screens/ChooseDestinationLocat
 import {WriteTripMessageScreen} from '../screens/WriteTripMessageScreen';
 import {useBackHandler} from '@yuju/global-hooks/useBackHandler';
 import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {useLocation} from '@yuju/global-hooks/useLocation';
 
 export type RequestStackParams = {
   RequestScreen: undefined;
@@ -32,6 +33,8 @@ interface Props
 
 export const RequestStackScreen: React.FC<Props> = () => {
   const {theme} = useTheme();
+  const {userLocation} = useLocation();
+  const socket = useSocketStore(s => s.socket);
   const inRide = useSocketStore(s => s.inRide);
   const inRidePending = useSocketStore(s => s.inRidePending);
   const isInRide = !!inRide;
@@ -40,6 +43,14 @@ export const RequestStackScreen: React.FC<Props> = () => {
   const shouldGoToRequestScreen = isInRide || isInRidePending;
 
   useBackHandler(() => shouldGoToRequestScreen);
+
+  useEffect(() => {
+    socket?.emit('PASSENGER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('PASSENGER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   return (
     <RequestStack.Navigator

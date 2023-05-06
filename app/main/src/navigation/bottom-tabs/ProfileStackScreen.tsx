@@ -20,6 +20,7 @@ import {AddAddressesBookmarkScreen} from '../screens/AddAddressesBookmarkScreen'
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {RootTabsParams} from './Root';
 import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {useLocation} from '@yuju/global-hooks/useLocation';
 
 export type ProfileStackParams = {
   ProfileScreen: undefined;
@@ -51,6 +52,8 @@ interface Props
 
 export const ProfileStackScreen: React.FC<Props> = ({navigation}) => {
   const {theme} = useTheme();
+  const {userLocation} = useLocation();
+  const socket = useSocketStore(s => s.socket);
   const inRide = useSocketStore(s => s.inRide);
   const inRidePending = useSocketStore(s => s.inRidePending);
   const isInRide = !!inRide;
@@ -63,6 +66,14 @@ export const ProfileStackScreen: React.FC<Props> = ({navigation}) => {
 
     navigation.jumpTo('RequestStackScreen');
   }, [shouldGoToRequestScreen, navigation]);
+
+  useEffect(() => {
+    socket?.emit('PASSENGER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('PASSENGER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   return (
     <ProfileStack.Navigator

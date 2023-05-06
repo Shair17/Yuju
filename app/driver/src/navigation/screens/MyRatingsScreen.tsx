@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Div, Image, Skeleton, Text, useTheme} from 'react-native-magnus';
 import {DrawerScreenProps} from '@react-navigation/drawer';
 import {RootDrawerParams} from '../drawer/Root';
@@ -6,11 +6,13 @@ import {usePagination} from '@yuju/global-hooks/usePagination';
 import {MyRating} from '@yuju/types/app';
 import {FlashList} from '@shopify/flash-list';
 import {MyRatingScreenRatingItem} from '@yuju/components/organisms/MyRatingScreenRatingItem';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {useLocation} from '@yuju/global-hooks/useLocation';
 
 interface Props
   extends DrawerScreenProps<RootDrawerParams, 'MyRatingsScreen'> {}
 
-export const MyRatingsScreen: React.FC<Props> = () => {
+export const MyRatingsScreen: React.FC<Props> = ({navigation}) => {
   const {
     theme: {colors},
   } = useTheme();
@@ -21,6 +23,23 @@ export const MyRatingsScreen: React.FC<Props> = () => {
   } = usePagination<MyRating>({
     url: '/ratings/drivers',
   });
+  const socket = useSocketStore(s => s.socket);
+  const {userLocation} = useLocation();
+  const shouldGoToRequestScreen = false;
+
+  useEffect(() => {
+    if (!shouldGoToRequestScreen) return;
+
+    navigation.jumpTo('HomeStackScreen');
+  }, [shouldGoToRequestScreen, navigation]);
+
+  useEffect(() => {
+    socket?.emit('DRIVER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('DRIVER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   if (isLoading) {
     return (

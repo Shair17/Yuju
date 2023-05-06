@@ -1,6 +1,5 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Div, Text} from 'react-native-magnus';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';
 import {useGreeting} from '@yuju/global-hooks/useGreeting';
 import {GetMyProfile} from '@yuju/types/app';
@@ -24,17 +23,22 @@ import {
 import {Vibration, StatusBar} from 'react-native';
 import {showNotification} from '@yuju/common/utils/notification';
 import {RootDrawerParams} from '../drawer/Root';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {useLocation} from '@yuju/global-hooks/useLocation';
+import {DrawerScreenProps} from '@react-navigation/drawer';
 
-interface Props
-  extends NativeStackScreenProps<RootDrawerParams, 'AskHelpScreen'> {}
+interface Props extends DrawerScreenProps<RootDrawerParams, 'AskHelpScreen'> {}
 
-export const AskHelpScreen: React.FC<Props> = () => {
+export const AskHelpScreen: React.FC<Props> = ({navigation}) => {
   const {data: myProfile} = useRequest<GetMyProfile>({
     method: 'GET',
     url: '/drivers/me',
   });
   const greeting = useGreeting();
   const [_, setClipboard] = useClipboard();
+  const socket = useSocketStore(s => s.socket);
+  const {userLocation} = useLocation();
+  const shouldGoToRequestScreen = false;
 
   const handleCopyEmail = (email: string) => {
     setClipboard(email);
@@ -47,6 +51,20 @@ export const AskHelpScreen: React.FC<Props> = () => {
       hideOnPress: true,
     });
   };
+
+  useEffect(() => {
+    if (!shouldGoToRequestScreen) return;
+
+    navigation.jumpTo('HomeStackScreen');
+  }, [shouldGoToRequestScreen, navigation]);
+
+  useEffect(() => {
+    socket?.emit('DRIVER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('DRIVER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   return (
     <ScrollScreen>

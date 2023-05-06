@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {StatusBar} from 'react-native';
 import {Div, Image} from 'react-native-magnus';
 import {DrawerScreenProps} from '@react-navigation/drawer';
@@ -7,11 +7,31 @@ import {ScrollScreen} from '@yuju/components/templates/ScrollScreen';
 import {FAQTitle} from '@yuju/components/atoms/FAQTitle';
 import {FAQItem} from '@yuju/components/atoms/FAQItem';
 import {RootDrawerParams} from '../drawer/Root';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {useLocation} from '@yuju/global-hooks/useLocation';
 
 interface Props
   extends DrawerScreenProps<RootDrawerParams, 'HelpCenterScreen'> {}
 
-export const HelpCenterScreen: React.FC<Props> = () => {
+export const HelpCenterScreen: React.FC<Props> = ({navigation}) => {
+  const socket = useSocketStore(s => s.socket);
+  const {userLocation} = useLocation();
+  const shouldGoToRequestScreen = false;
+
+  useEffect(() => {
+    if (!shouldGoToRequestScreen) return;
+
+    navigation.jumpTo('HomeStackScreen');
+  }, [shouldGoToRequestScreen, navigation]);
+
+  useEffect(() => {
+    socket?.emit('DRIVER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('DRIVER_LOCATION');
+    };
+  }, [socket, userLocation]);
+
   return (
     <ScrollScreen>
       <StatusBar backgroundColor="#fff" barStyle="dark-content" />

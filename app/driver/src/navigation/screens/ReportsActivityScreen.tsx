@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Div, Image, Skeleton, Text, useTheme} from 'react-native-magnus';
 import {DrawerScreenProps} from '@react-navigation/drawer';
 import {usePagination} from '@yuju/global-hooks/usePagination';
@@ -6,6 +6,8 @@ import {RootDrawerParams} from '../drawer/Root';
 import {FlashList} from '@shopify/flash-list';
 import {Report} from '@yuju/types/app';
 import {ReportsActivityScreenMyReportItem} from '@yuju/components/organisms/ReportsActivityScreenMyReportItem';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {useLocation} from '@yuju/global-hooks/useLocation';
 
 interface Props
   extends DrawerScreenProps<RootDrawerParams, 'ReportsActivityScreen'> {}
@@ -21,6 +23,23 @@ export const ReportsActivityScreen: React.FC<Props> = ({navigation}) => {
   } = usePagination<Report>({
     url: '/bug-reports/drivers',
   });
+  const socket = useSocketStore(s => s.socket);
+  const {userLocation} = useLocation();
+  const shouldGoToRequestScreen = false;
+
+  useEffect(() => {
+    if (!shouldGoToRequestScreen) return;
+
+    navigation.jumpTo('HomeStackScreen');
+  }, [shouldGoToRequestScreen, navigation]);
+
+  useEffect(() => {
+    socket?.emit('DRIVER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('DRIVER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   if (isLoading) {
     return (

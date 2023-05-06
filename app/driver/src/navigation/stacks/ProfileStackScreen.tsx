@@ -1,9 +1,13 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {useTheme} from 'react-native-magnus';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {ProfileScreen} from '../screens/ProfileScreen';
 import {EditProfileScreen} from '../screens/EditProfileScreen';
 import {EditVehicleScreen} from '../screens/EditVehicleScreen';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {DrawerScreenProps} from '@react-navigation/drawer/';
+import {RootDrawerParams} from '../drawer/Root';
+import {useLocation} from '@yuju/global-hooks/useLocation';
 
 export type ProfileStackParams = {
   ProfileScreen: undefined;
@@ -15,8 +19,28 @@ export type ProfileStackParamsValue = keyof ProfileStackParams;
 
 const ProfileStack = createNativeStackNavigator<ProfileStackParams>();
 
-export const ProfileStackScreen = () => {
+interface Props
+  extends DrawerScreenProps<RootDrawerParams, 'ProfileStackScreen'> {}
+
+export const ProfileStackScreen: React.FC<Props> = ({navigation}) => {
   const {theme} = useTheme();
+  const socket = useSocketStore(s => s.socket);
+  const {userLocation} = useLocation();
+  const shouldGoToRequestScreen = false;
+
+  useEffect(() => {
+    if (!shouldGoToRequestScreen) return;
+
+    navigation.jumpTo('HomeStackScreen');
+  }, [shouldGoToRequestScreen, navigation]);
+
+  useEffect(() => {
+    socket?.emit('DRIVER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('DRIVER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   return (
     <ProfileStack.Navigator

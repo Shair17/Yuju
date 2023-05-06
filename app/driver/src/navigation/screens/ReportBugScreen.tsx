@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {StatusBar} from 'react-native';
 import {Button, Div, Icon, Input, Text} from 'react-native-magnus';
 import {DrawerScreenProps} from '@react-navigation/drawer';
@@ -7,6 +7,8 @@ import {Controller} from 'react-hook-form';
 import {useBugReport} from '@yuju/global-hooks/useBugReport';
 import {RootDrawerParams} from '../drawer/Root';
 import {showNotification} from '@yuju/common/utils/notification';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {useLocation} from '@yuju/global-hooks/useLocation';
 
 interface Props
   extends DrawerScreenProps<RootDrawerParams, 'ReportBugScreen'> {}
@@ -21,6 +23,9 @@ export const ReportBugScreen: React.FC<Props> = ({navigation}) => {
     clearErrors,
     reset,
   } = useBugReport();
+  const socket = useSocketStore(s => s.socket);
+  const {userLocation} = useLocation();
+  const shouldGoToRequestScreen = false;
 
   const handleSubmitBug = handleSubmit(data => {
     executeCreateBugReport({
@@ -43,6 +48,20 @@ export const ReportBugScreen: React.FC<Props> = ({navigation}) => {
       navigation.navigate('ReportsActivityScreen');
     });
   });
+
+  useEffect(() => {
+    if (!shouldGoToRequestScreen) return;
+
+    navigation.jumpTo('HomeStackScreen');
+  }, [shouldGoToRequestScreen, navigation]);
+
+  useEffect(() => {
+    socket?.emit('DRIVER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('DRIVER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   return (
     <ScrollScreen>

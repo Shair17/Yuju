@@ -9,6 +9,7 @@ import {RootTabsParams} from './Root';
 import {useTheme} from 'react-native-magnus';
 import {EditProfileScreen} from '../screens/EditProfileScreen';
 import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {useLocation} from '@yuju/global-hooks/useLocation';
 
 export type HomeStackParams = {
   HomeScreen: undefined;
@@ -27,6 +28,8 @@ interface Props
 
 export const HomeStackScreen: React.FC<Props> = ({navigation, route}) => {
   const {theme} = useTheme();
+  const {userLocation} = useLocation();
+  const socket = useSocketStore(s => s.socket);
   const inRide = useSocketStore(s => s.inRide);
   const inRidePending = useSocketStore(s => s.inRidePending);
   const isInRide = !!inRide;
@@ -39,6 +42,14 @@ export const HomeStackScreen: React.FC<Props> = ({navigation, route}) => {
 
     navigation.jumpTo('RequestStackScreen');
   }, [shouldGoToRequestScreen, navigation]);
+
+  useEffect(() => {
+    socket?.emit('PASSENGER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('PASSENGER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   return (
     <HomeStack.Navigator

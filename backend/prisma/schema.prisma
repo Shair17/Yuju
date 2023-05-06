@@ -14,6 +14,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model App {
+  id String @id @default(cuid())
+
+  serverName       String
+  serverVersion    String
+  appName          String
+  appVersion       String
+  appDeveloper     String
+  appUpdateMessage String
+
+  @@map("app")
+}
+
 model Profile {
   id String @id @default(cuid())
 

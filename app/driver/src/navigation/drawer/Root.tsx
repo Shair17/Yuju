@@ -1,4 +1,4 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import {useTheme, Icon} from 'react-native-magnus';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -18,6 +18,8 @@ import {Vibration} from 'react-native';
 import {showAlert} from '@yuju/common/utils/notification';
 import {useFocusEffect} from '@react-navigation/native';
 import {MyEarningsScreen} from '../screens/MyEarningsScreen';
+import {useLocation} from '@yuju/global-hooks/useLocation';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
 
 export type RootDrawerParams = {
   HomeStackScreen: undefined;
@@ -40,6 +42,13 @@ interface Props
 export const Root: React.FC<Props> = ({navigation}) => {
   const {theme} = useTheme();
   const {isActive} = useIsActive();
+  const {userLocation} = useLocation();
+  const socket = useSocketStore(s => s.socket);
+  // const inRide = useSocketStore(s => s.inRide);
+  // const inRidePending = useSocketStore(s => s.inRidePending);
+  // const isInRide = !!inRide;
+  // const isInRidePending = !!inRidePending;
+  // const shouldGoToRequestScreen = isInRide || isInRidePending;
 
   useFocusEffect(
     useCallback(() => {
@@ -72,6 +81,14 @@ export const Root: React.FC<Props> = ({navigation}) => {
       return () => clearTimeout(timeoutId);
     }, [navigation, isActive]),
   );
+
+  useEffect(() => {
+    socket?.emit('DRIVER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('DRIVER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   return (
     <Drawer.Navigator

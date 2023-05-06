@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Div, Image, Skeleton, Text, useTheme} from 'react-native-magnus';
 import {DrawerScreenProps} from '@react-navigation/drawer';
 import {RootDrawerParams} from '../drawer/Root';
@@ -7,6 +7,8 @@ import {useRequest} from '@yuju/global-hooks/useRequest';
 import {FlashList} from '@shopify/flash-list';
 import {MyEarning, MyEarnings} from '@yuju/types/app';
 import {TripsActivityScreenTripItem} from '@yuju/components/organisms/TripsActivityScreenTripItem';
+import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
+import {useLocation} from '@yuju/global-hooks/useLocation';
 
 interface Props
   extends DrawerScreenProps<RootDrawerParams, 'MyEarningsScreen'> {}
@@ -27,6 +29,23 @@ export const MyEarningsScreen: React.FC<Props> = ({navigation, route}) => {
   } = usePagination<MyEarning>({
     url: '/drivers/earnings',
   });
+  const socket = useSocketStore(s => s.socket);
+  const {userLocation} = useLocation();
+  const shouldGoToRequestScreen = false;
+
+  useEffect(() => {
+    if (!shouldGoToRequestScreen) return;
+
+    navigation.jumpTo('HomeStackScreen');
+  }, [shouldGoToRequestScreen, navigation]);
+
+  useEffect(() => {
+    socket?.emit('DRIVER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('DRIVER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   if (myEarningsTotalIsLoading || myEarningsIsLoading || !myEarningsTotal) {
     return (

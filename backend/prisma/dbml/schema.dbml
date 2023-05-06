@@ -2,6 +2,16 @@
 //// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 //// ------------------------------------------------------
 
+Table app {
+  id String [pk]
+  serverName String [not null]
+  serverVersion String [not null]
+  appName String [not null]
+  appVersion String [not null]
+  appDeveloper String [not null]
+  appUpdateMessage String [not null]
+}
+
 Table profiles {
   id String [pk]
   name String [not null]

@@ -780,8 +780,9 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       const foundDriver = sortedDrivers[0];
 
       if (
-        foundDriver.location.latitude === 0 &&
-        foundDriver.location.longitude === 0
+        (foundDriver.location.latitude === 0 &&
+          foundDriver.location.longitude === 0) ||
+        this.driverExistsInRide(foundDriver.id)
       ) {
         return this.getClosestDriver(passengerLocation, index + 1);
       }

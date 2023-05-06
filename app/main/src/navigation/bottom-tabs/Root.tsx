@@ -1,10 +1,5 @@
-import React from 'react';
-import {
-  TouchableWithoutFeedback,
-  TouchableOpacity,
-  Pressable,
-} from 'react-native';
-import {Icon, Avatar, Skeleton, Div} from 'react-native-magnus';
+import React, {useEffect} from 'react';
+import {Icon, Avatar, Skeleton} from 'react-native-magnus';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import * as Animatable from 'react-native-animatable';
 import {HomeStackScreen} from './HomeStackScreen';
@@ -15,7 +10,8 @@ import {RootStackParams} from '../Root';
 import {useRequest} from '@yuju/global-hooks/useRequest';
 import {GetMyProfile} from '@yuju/types/app';
 import {useSocketStore} from '@yuju/mods/socket/stores/useSocketStore';
-import {showAlert, showNotification} from '@yuju/common/utils/notification';
+import {showNotification} from '@yuju/common/utils/notification';
+import {useLocation} from '@yuju/global-hooks/useLocation';
 
 export type RootTabsParams = {
   HomeStackScreen: undefined;
@@ -37,8 +33,18 @@ export const Root: React.FC<Props> = () => {
   const inRidePending = useSocketStore(s => s.inRidePending);
   const isInRide = !!inRide;
   const isInRidePending = !!inRidePending;
+  const {userLocation} = useLocation();
+  const socket = useSocketStore(s => s.socket);
 
   const shouldGoToRequestScreen = isInRide || isInRidePending;
+
+  useEffect(() => {
+    socket?.emit('PASSENGER_LOCATION', userLocation);
+
+    return () => {
+      socket?.off('PASSENGER_LOCATION');
+    };
+  }, [socket, userLocation]);
 
   return (
     <Tab.Navigator
