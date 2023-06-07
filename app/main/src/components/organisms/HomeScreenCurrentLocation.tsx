@@ -137,15 +137,20 @@ export const HomeScreenCurrentLocation: React.FC = () => {
         />
 
         <Div flex={1}>
-          <TextTicker
-            duration={5000}
-            loop
-            bounce
-            onPress={handleCopyMyCurrentAddressToClipboard}>
-            <Text color="primary500" fontSize="md" fontWeight="500">
-              {currentAddress ? currentAddress : 'Cargando...'}
-            </Text>
-          </TextTicker>
+          {currentAddress ? (
+            <TextTicker
+              duration={5000}
+              loop
+              bounce
+              onPress={handleCopyMyCurrentAddressToClipboard}>
+              <Text color="primary500" fontSize="md" fontWeight="500">
+                {/* {currentAddress ? currentAddress : 'Cargando...'} */}
+                {currentAddress}
+              </Text>
+            </TextTicker>
+          ) : (
+            <Skeleton.Circle w="100%" h={18} bg="gray100" />
+          )}
         </Div>
       </Div>
 
@@ -154,7 +159,7 @@ export const HomeScreenCurrentLocation: React.FC = () => {
           <GPSAccessDenied onButtonPress={callGetCurrentLocation} />
         ) : !hasLocation ? (
           <Div flex={1}>
-            <Skeleton.Box w="100%" h="100%" bg="gray100" />
+            <Skeleton.Circle w="100%" h="100%" bg="gray100" />
           </Div>
         ) : (
           <Fragment>

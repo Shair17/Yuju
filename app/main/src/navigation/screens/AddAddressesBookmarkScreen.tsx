@@ -24,6 +24,7 @@ import {wait} from '@yuju/common/utils/time';
 import {defaultTags} from '@yuju/common/constants/tags';
 import {useAddAddress} from '@yuju/global-hooks/useAddAddress';
 import {globalStyles} from '@yuju/styles/globals';
+import {trimStrings} from '@yuju/common/utils/string';
 
 interface Props
   extends NativeStackScreenProps<
@@ -68,36 +69,41 @@ export const AddAddressesBookmarkScreen: React.FC<Props> = ({navigation}) => {
   const following = useRef<boolean>(true);
   const mapReady = useRef<boolean>(false);
 
-  const handleAddNewAddress = handleSubmit(
-    async ({name, address, city, zip}) => {
-      if (addAddressIsLoading || myAddressesIsLoading) {
-        return;
-      }
+  const handleAddNewAddress = handleSubmit(async data => {
+    if (addAddressIsLoading || myAddressesIsLoading) {
+      return;
+    }
 
-      if (!tag) {
-        setTagError(true);
-        return;
-      }
+    if (!tag) {
+      setTagError(true);
+      return;
+    }
 
-      await executeCreateAddress({
-        data: {
-          name,
-          address,
-          zip,
-          city,
-          tag,
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-        },
-      });
+    const [name, address, zip, city] = trimStrings(
+      data.name,
+      data.address,
+      data.zip,
+      data.city,
+    );
 
-      await mutateMyAddresses();
+    await executeCreateAddress({
+      data: {
+        name,
+        address,
+        zip,
+        city,
+        tag,
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      },
+    });
 
-      setTagError(false);
+    await mutateMyAddresses();
 
-      navigation.goBack();
-    },
-  );
+    setTagError(false);
+
+    navigation.goBack();
+  });
 
   const fillLocationInputs = useCallback(() => {
     if (

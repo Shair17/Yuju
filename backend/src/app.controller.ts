@@ -1,6 +1,5 @@
 import {Controller, GET, Inject} from 'fastify-decorators';
 import {AppService} from './app.service';
-import {hasBearerToken, userIsAuthenticated} from './guards/auth-guard.hook';
 
 @Controller('/')
 export class AppController {

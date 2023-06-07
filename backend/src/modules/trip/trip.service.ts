@@ -189,6 +189,7 @@ export class TripService {
         user: {
           id: user.id,
         },
+        status: TripStatus.Completed,
       },
       skip: (page - 1) * limit,
       take: limit,
@@ -287,6 +288,8 @@ export class TripService {
 
     const totalPages = Math.ceil(totalTrips / limit);
 
+    console.log('hola', {trips, totalTrips, totalPages});
+
     return {
       data: trips,
       page,
@@ -334,6 +337,7 @@ export class TripService {
         user: {
           id,
         },
+        status: TripStatus.Completed,
       },
     });
   }

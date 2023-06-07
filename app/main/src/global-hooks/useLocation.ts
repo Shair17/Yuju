@@ -1,5 +1,6 @@
 import {useState, useEffect, useRef} from 'react';
 import Geolocation from 'react-native-geolocation-service';
+// import Geolocation from '@react-native-community/geolocation';
 
 // LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
 // LogBox.ignoreAllLogs(); //Ignore all log notifications

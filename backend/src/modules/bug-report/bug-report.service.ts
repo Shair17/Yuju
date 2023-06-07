@@ -73,6 +73,8 @@ export class BugReportService {
 
     const totalPages = Math.ceil(totalReports / limit);
 
+    console.log({reports, totalReports, totalPages});
+
     return {
       data: reports,
       page,

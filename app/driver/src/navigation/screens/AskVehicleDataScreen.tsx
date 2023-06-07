@@ -20,10 +20,7 @@ import {showAlert, showNotification} from '@yuju/common/utils/notification';
 import {AskVehicleDataScreenPhotoItem} from '@yuju/components/atoms/AskVehicleDataScreenPhotoItem';
 import {useUploadDocuments} from '@yuju/global-hooks/useUploadDocuments';
 import {useCloudinary, buildBase64} from '@yuju/common/utils/cloudinary';
-import {
-  CLOUDINARY_API,
-  CLOUDINARY_CLOUD_NAME,
-} from '@yuju/common/constants/cloudinary';
+import {CLOUDINARY_API} from '@yuju/common/constants/cloudinary';
 
 interface Props
   extends NativeStackScreenProps<RootStackParams, 'AskVehicleDataScreen'> {}

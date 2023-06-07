@@ -12,6 +12,7 @@ interface Props
   extends NativeStackScreenProps<RootStackParams, 'AuthenticationScreen'> {}
 
 const authenticationBackgroundImage = require('@yuju/assets/images/svg-shape-8.png');
+const logoImage = require('@yuju/assets/logo.png');
 
 export const AuthenticationScreen: React.FC<Props> = () => {
   const {overlayVisible, loading, loginWithFacebook} = useAuthentication();
@@ -32,18 +33,18 @@ export const AuthenticationScreen: React.FC<Props> = () => {
             roundedBottomRight={80}>
             <Div flex={1} justifyContent="center" alignItems="center">
               <Div
-                bg="red100"
+                bg="primary50"
                 alignSelf="center"
                 w={200}
                 h={200}
                 rounded="circle">
                 <Image
-                  w={150}
-                  h={150}
+                  w={100}
+                  h={100}
                   flex={1}
                   alignSelf="center"
                   resizeMode="contain"
-                  // source={logoImage}
+                  source={logoImage}
                 />
               </Div>
             </Div>

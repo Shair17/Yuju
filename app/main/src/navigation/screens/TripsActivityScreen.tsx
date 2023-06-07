@@ -15,8 +15,8 @@ export const TripsActivityScreen: React.FC<Props> = ({navigation}) => {
     theme: {colors},
   } = useTheme();
   const {
-    myData: myTrips,
     isLoading,
+    myData: myTrips,
     handleAddMoreItems,
   } = usePagination<MyTrip>({
     url: '/trips/users',
@@ -85,7 +85,7 @@ export const TripsActivityScreen: React.FC<Props> = ({navigation}) => {
           />
         );
       }}
-      keyExtractor={report => report.id}
+      keyExtractor={myTrip => myTrip.id}
       onEndReached={handleAddMoreItems}
       onEndReachedThreshold={0.5}
       contentContainerStyle={{
