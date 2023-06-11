@@ -12,7 +12,7 @@ import {showAlert} from '@yuju/common/utils/notification';
 import {useIsActive} from '@yuju/global-hooks/useIsActive';
 import {formatDate} from '@yuju/common/utils/format';
 import {getAgeFromDate} from '@yuju/common/utils/age';
-import BottomSheet from '@gorhom/bottom-sheet';
+import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import {useFocusEffect} from '@react-navigation/native';
 
 interface Props
@@ -472,152 +472,162 @@ export const ProfileScreen: React.FC<Props> = ({navigation}) => {
         onClose={() => {
           setActivateAccountBottomSheetIsOpen(false);
         }}>
-        <Div flex={1} px="2xl" py="lg">
-          <Text fontSize="6xl" fontWeight="bold">
-            Tu cuenta aún no está activada
-          </Text>
-          <Text fontSize="sm" color="gray500">
-            Es extremadamente necesario que tengas tu cuenta activada para
-            empezar a trabajar con Yuju.
-          </Text>
-
-          <Div mt="lg">
-            <Text fontSize="xs" color="gray500" fontWeight="500">
-              Tienes que envíar todos los documentos que se muestran aquí.
+        <BottomSheetScrollView>
+          <Div flex={1} px="2xl" py="lg">
+            <Text fontSize="6xl" fontWeight="bold">
+              Tu cuenta aún no está activada
             </Text>
-            <Div row mt="xs">
-              <Div
-                flex={1}
-                alignItems="center"
-                justifyContent="center"
-                p="md"
-                bg={myVehicle?.circulationCardVerified ? 'primary50' : 'red50'}
-                rounded="lg"
-                mr="xs">
-                <Text
-                  fontSize="lg"
-                  color={
-                    myVehicle?.circulationCardVerified ? 'primary500' : 'red500'
+            <Text fontSize="sm" color="gray500">
+              Es extremadamente necesario que tengas tu cuenta activada para
+              empezar a trabajar con Yuju.
+            </Text>
+
+            <Div mt="lg">
+              <Text fontSize="xs" color="gray500" fontWeight="500">
+                Tienes que envíar todos los documentos que se muestran aquí.
+              </Text>
+              <Div row mt="xs">
+                <Div
+                  flex={1}
+                  alignItems="center"
+                  justifyContent="center"
+                  p="md"
+                  bg={
+                    myVehicle?.circulationCardVerified ? 'primary50' : 'red50'
                   }
-                  fontWeight="bold"
-                  textAlign="center">
-                  Tarjeta de Circulación
-                </Text>
+                  rounded="lg"
+                  mr="xs">
+                  <Text
+                    fontSize="lg"
+                    color={
+                      myVehicle?.circulationCardVerified
+                        ? 'primary500'
+                        : 'red500'
+                    }
+                    fontWeight="bold"
+                    textAlign="center">
+                    Tarjeta de Circulación
+                  </Text>
+                </Div>
+                <Div
+                  flex={1}
+                  alignItems="center"
+                  justifyContent="center"
+                  p="md"
+                  bg={myVehicle?.dniVerified ? 'primary50' : 'red50'}
+                  rounded="lg"
+                  mx="xs">
+                  <Text
+                    fontSize="lg"
+                    color={myVehicle?.dniVerified ? 'primary500' : 'red500'}
+                    fontWeight="bold"
+                    textAlign="center">
+                    DNI
+                  </Text>
+                </Div>
+                <Div
+                  flex={1}
+                  alignItems="center"
+                  justifyContent="center"
+                  p="md"
+                  bg={myVehicle?.licenseVerified ? 'primary50' : 'red50'}
+                  rounded="lg"
+                  ml="xs">
+                  <Text
+                    fontSize="lg"
+                    color={myVehicle?.licenseVerified ? 'primary500' : 'red500'}
+                    fontWeight="bold"
+                    textAlign="center">
+                    Licencia
+                  </Text>
+                </Div>
               </Div>
-              <Div
-                flex={1}
-                alignItems="center"
-                justifyContent="center"
-                p="md"
-                bg={myVehicle?.dniVerified ? 'primary50' : 'red50'}
-                rounded="lg"
-                mx="xs">
-                <Text
-                  fontSize="lg"
-                  color={myVehicle?.dniVerified ? 'primary500' : 'red500'}
-                  fontWeight="bold"
-                  textAlign="center">
-                  DNI
-                </Text>
-              </Div>
-              <Div
-                flex={1}
-                alignItems="center"
-                justifyContent="center"
-                p="md"
-                bg={myVehicle?.licenseVerified ? 'primary50' : 'red50'}
-                rounded="lg"
-                ml="xs">
-                <Text
-                  fontSize="lg"
-                  color={myVehicle?.licenseVerified ? 'primary500' : 'red500'}
-                  fontWeight="bold"
-                  textAlign="center">
-                  Licencia
-                </Text>
+              <Div row mt="md">
+                <Div
+                  flex={1}
+                  alignItems="center"
+                  justifyContent="center"
+                  p="md"
+                  bg={myVehicle?.propertyCardVerified ? 'primary50' : 'red50'}
+                  rounded="lg"
+                  mr="xs">
+                  <Text
+                    fontSize="lg"
+                    color={
+                      myVehicle?.propertyCardVerified ? 'primary500' : 'red500'
+                    }
+                    fontWeight="bold"
+                    textAlign="center">
+                    Tarjeta de Propiedad
+                  </Text>
+                </Div>
+                <Div
+                  flex={1}
+                  alignItems="center"
+                  justifyContent="center"
+                  p="md"
+                  bg={myVehicle?.soatVerified ? 'primary50' : 'red50'}
+                  rounded="lg"
+                  mx="xs">
+                  <Text
+                    fontSize="lg"
+                    color={myVehicle?.soatVerified ? 'primary500' : 'red500'}
+                    fontWeight="bold"
+                    textAlign="center">
+                    SOAT
+                  </Text>
+                </Div>
+                <Div
+                  flex={1}
+                  alignItems="center"
+                  justifyContent="center"
+                  p="md"
+                  bg={
+                    myVehicle?.technicalReviewVerified ? 'primary50' : 'red50'
+                  }
+                  rounded="lg"
+                  ml="xs">
+                  <Text
+                    fontSize="lg"
+                    color={
+                      myVehicle?.technicalReviewVerified
+                        ? 'primary500'
+                        : 'red500'
+                    }
+                    fontWeight="bold"
+                    textAlign="center">
+                    Revisión Técnica
+                  </Text>
+                </Div>
               </Div>
             </Div>
-            <Div row mt="md">
-              <Div
-                flex={1}
-                alignItems="center"
-                justifyContent="center"
-                p="md"
-                bg={myVehicle?.propertyCardVerified ? 'primary50' : 'red50'}
+
+            <Div mt="xl">
+              <Button
+                block
+                bg="green500"
                 rounded="lg"
-                mr="xs">
-                <Text
-                  fontSize="lg"
-                  color={
-                    myVehicle?.propertyCardVerified ? 'primary500' : 'red500'
-                  }
-                  fontWeight="bold"
-                  textAlign="center">
-                  Tarjeta de Propiedad
-                </Text>
-              </Div>
-              <Div
-                flex={1}
-                alignItems="center"
-                justifyContent="center"
-                p="md"
-                bg={myVehicle?.soatVerified ? 'primary50' : 'red50'}
-                rounded="lg"
-                mx="xs">
-                <Text
-                  fontSize="lg"
-                  color={myVehicle?.soatVerified ? 'primary500' : 'red500'}
-                  fontWeight="bold"
-                  textAlign="center">
-                  SOAT
-                </Text>
-              </Div>
-              <Div
-                flex={1}
-                alignItems="center"
-                justifyContent="center"
-                p="md"
-                bg={myVehicle?.technicalReviewVerified ? 'primary50' : 'red50'}
-                rounded="lg"
-                ml="xs">
-                <Text
-                  fontSize="lg"
-                  color={
-                    myVehicle?.technicalReviewVerified ? 'primary500' : 'red500'
-                  }
-                  fontWeight="bold"
-                  textAlign="center">
-                  Revisión Técnica
-                </Text>
-              </Div>
+                fontSize="xl"
+                color="white"
+                fontWeight="bold"
+                prefix={
+                  <Icon
+                    mr="sm"
+                    fontSize="2xl"
+                    fontFamily="Ionicons"
+                    name="logo-whatsapp"
+                    color="white"
+                  />
+                }>
+                Envíar Documentos
+              </Button>
+              <Text fontSize={10} color="gray500" mt="xs">
+                * Envía los documentos solicitados en buena calidad a través de
+                WhatsApp.
+              </Text>
             </Div>
           </Div>
-
-          <Div mt="xl">
-            <Button
-              block
-              bg="green500"
-              rounded="lg"
-              fontSize="xl"
-              color="white"
-              fontWeight="bold"
-              prefix={
-                <Icon
-                  mr="sm"
-                  fontSize="2xl"
-                  fontFamily="Ionicons"
-                  name="logo-whatsapp"
-                  color="white"
-                />
-              }>
-              Envíar Documentos
-            </Button>
-            <Text fontSize={10} color="gray500" mt="xs">
-              * Envía los documentos solicitados en buena calidad a través de
-              WhatsApp.
-            </Text>
-          </Div>
-        </Div>
+        </BottomSheetScrollView>
       </BottomSheet>
     </Fragment>
   );

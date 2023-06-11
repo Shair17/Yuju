@@ -1,7 +1,7 @@
 import {isDev} from './environment';
 
 // MODIFICAR ESTE CUANDO CAMBIE LA IP
-export const BASE_API = 'http://192.168.1.39:3000';
+export const BASE_API = 'http://192.168.1.108:3000';
 
 export const API_BASE = `${BASE_API}/v1`;
 
