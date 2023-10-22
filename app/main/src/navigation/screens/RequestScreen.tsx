@@ -72,7 +72,6 @@ export const RequestScreen: React.FC<Props> = ({navigation}) => {
   //# Bottom Sheet
   //@ Request Ride
   const requestRideBottomSheetRef = useRef<BottomSheet>(null);
-  const requestRideSnapPoints = useMemo(() => ['50%', '75%', '100%'], []);
   //@ In Ride Pending
   const inRidePendingBottomSheetRef = useRef<BottomSheet>(null);
 
@@ -326,14 +325,11 @@ export const RequestScreen: React.FC<Props> = ({navigation}) => {
       {canRequestRide ? (
         <BottomSheet
           index={0}
-          enableOverDrag={false}
-          enableContentPanningGesture={false}
           ref={requestRideBottomSheetRef}
-          snapPoints={requestRideSnapPoints}
-          enableHandlePanningGesture={false}
+          snapPoints={['50%']}
           onChange={handleSheetChanges}>
           <BottomSheetScrollView>
-            <Div px="2xl" pt="lg" flex={1}>
+            <Div px="2xl" py="lg" flex={1}>
               <Div>
                 {/** Separator */}
                 <RequestScreenAskAddressesSeparator />

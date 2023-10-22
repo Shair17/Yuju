@@ -5,7 +5,7 @@ import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
 
 const adUnitId = __DEV__
   ? TestIds.BANNER
-  : 'ca-app-pub-1863951032999492/4035842496';
+  : 'ca-app-pub-3125447360428057/6805817319';
 
 export const ProfileScreenAdBanner = () => {
   return (
@@ -24,40 +24,3 @@ export const ProfileScreenAdBanner = () => {
     </Div>
   );
 };
-
-/* <Div
-    style={{display: 'none'}}
-    rounded="lg"
-    px="xl"
-    py="lg"
-    borderWidth={1}
-    borderColor="gray200"
-    // shadow="xs"
-    // bg="#fff"
-    alignItems="center"
-    justifyContent="space-between"
-    mt="md"
-    overflow="hidden"
-    flex={1}
-    row>
-    <Div flex={2}>
-      <Image
-        flex={1}
-        source={require('@yuju/assets/images/rocket.png')}
-        resizeMode="contain"
-      />
-    </Div>
-    <Div flex={3}>
-      <Text mb="sm" fontSize="xl" fontWeight="bold" color="gray500">
-        Yuju Pro 😎
-      </Text>
-
-      <Text mb="sm" color="gray500">
-        Go Pro and unlock all the benefits and assets!
-      </Text>
-
-      <Button rounded="lg" block fontWeight="bold">
-        Subir a Premium
-      </Button>
-    </Div>
-  </Div> */

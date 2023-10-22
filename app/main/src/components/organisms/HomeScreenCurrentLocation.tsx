@@ -159,7 +159,13 @@ export const HomeScreenCurrentLocation: React.FC = () => {
           <GPSAccessDenied onButtonPress={callGetCurrentLocation} />
         ) : !hasLocation ? (
           <Div flex={1}>
-            <Skeleton.Circle w="100%" h="100%" bg="gray100" />
+            <Skeleton.Circle
+              rounded="lg"
+              flex={1}
+              w="100%"
+              h="100%"
+              bg="gray100"
+            />
           </Div>
         ) : (
           <Fragment>
