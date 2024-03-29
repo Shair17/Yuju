@@ -1,15 +1,8 @@
-import buildServer from './server';
-import {serverHost} from './common/constants/app';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await buildServer();
-
-  const port = app.config.PORT;
-
-  await app.listen({
-    port,
-    host: serverHost,
-  });
+  const app = await NestFactory.create(AppModule);
+  await app.listen(3000);
 }
-
-bootstrap().catch(console.error);
+bootstrap();

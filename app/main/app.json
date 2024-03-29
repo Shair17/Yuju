@@ -1,8 +1,0 @@
-{
-  "name": "Yuju",
-  "displayName": "Yuju",
-  "react-native-google-mobile-ads": {
-    "android_app_id": "ca-app-pub-3125447360428057~6120255752",
-    "ios_app_id": "ca-app-pub-xxxxxxxx~xxxxxxxx"
-  }
-}
