@@ -1,6 +1,6 @@
 import React, {useCallback} from 'react';
 import {TouchableOpacity} from 'react-native';
-import {Text, Box, Button} from '@yuju/modules/yuju-ui';
+import {Text, Box, Button} from '@yuju/modules/ui';
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,

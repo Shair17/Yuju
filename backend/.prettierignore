@@ -1,0 +1,10 @@
+**/.git
+**/.svn
+**/.hg
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+/dist/
